@@ -20,6 +20,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.drawable.AnimationDrawable;
@@ -35,6 +36,14 @@ import android.view.animation.Interpolator;
 
 public class GameActivity extends Activity {
 
+	// Konstanten Minh
+	private final char ARTSOLDAT = 1;
+	
+	// Variablen Minh
+	ArrayList<Einheit> allunits;
+	ArrayList<ImageView> einheitbilder;
+	int endofarray = 0;
+	
 	ImageView s_fight_animation;
 	ImageView s_walk_animation_g;
 	TimerAddX tasknew;
@@ -43,8 +52,7 @@ public class GameActivity extends Activity {
 	ImageView kampf_animation_g;
 	
 	public boolean timerstartboolg = false;
-	public boolean timerstartbool = false;
-	private boolean kampftest = false;
+
 	private boolean kampftestg = false;
 	private boolean hitboxtest = true;
 	private boolean hitboxtestg = true;
@@ -53,7 +61,7 @@ public class GameActivity extends Activity {
 	private boolean kampfanimtest = false;
 	private boolean kampfanimtestg = false;
 	
-	ArrayList<Einheit> allunits;
+
 	//Variablen von ALex
 	
 
@@ -140,14 +148,39 @@ boolean running=true;
 	
 	protected void onStart(){ //passiert wenn die Activity gestartet wird
 		super.onStart();
-	Log.d("Start","Act.Start");
+		Log.d("Start","Act.Start");
+		allunits = new ArrayList<GameActivity.Einheit>();
+		einheitbilder = new ArrayList<ImageView>();
 	}
 	
+	public boolean einheitistamlaufen = false;
+	private boolean kampftest = false;
+	private int xx = 0;
+	
+	
+    class TimerAddX extends TimerTask { // gibt den X wert des eigenen Stickmans an
+    	
+    	public int getXx() {
+    		return xx;
+    	}
+    	public void setXx(int xnew) {
+    		xx = xnew;
+    	} 
+    	public void run() {
+    		  if(einheitistamlaufen==true){
+    		  xx = xx+1;
+    		//  Log.d("x","x wurde erhöht");
+    		  
+    		  }
+    	  }
+    	}
 	ImageView s_walk_animation;
-	private ImageView takeout2() {
-		ImageView testnu = new ImageView(GameActivity.this);  // erstellung eines neuen ImageViews für jeden Knopfdruck
-		testnu.setImageResource(R.drawable.anim_stickman_walking);
-		return testnu;
+	
+	
+	private void eigenersoldatpic() {
+		ImageView neuerSoldat = new ImageView(GameActivity.this);  // erstellung eines neuen ImageViews für jeden Knopfdruck
+		neuerSoldat.setImageResource(R.drawable.anim_stickman_walking);
+		einheitbilder.add(endofarray, neuerSoldat);
 	}
 	
 	private void takeout(ImageView testnu) {
@@ -221,30 +254,28 @@ boolean running=true;
 @SuppressWarnings("deprecation")
 public void SpawnSoldat(View Buttonsoldat) //onClick Funktion, spawn Soldaten
 {
-	allunits = new ArrayList<GameActivity.Einheit>();
-	allunits.add(new Einheit());
+	
 	Log.d("Soldat", "Soldat wird gespawnt!");
 	
 	if(zaehler>=20)
 		 {
-		zaehler=zaehler-20;	//zaehler ist der Goldwert, der Soldat kostet gerade 20 Gold
-		 
+			zaehler=zaehler-20;	//zaehler ist der Goldwert, der Soldat kostet gerade 20 Gold
+			Einheit eigeneeinheit = new Einheit();
+			allunits.add(endofarray, eigeneeinheit);
+			eigenersoldatpic();
+		
+			AbsoluteLayout rl = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame); //Position des ImageViews
+			AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(350, 350,0,300);
+			rl.addView(einheitbilder.get(endofarray), lp); 
+			takeout(einheitbilder.get(endofarray));
+			
+			einheitistamlaufen=true; //Bedinung damit der Zähler zählt
+			tasknew = new TimerAddX(); //Startet den Zähler für die X Berechnung
+			new Timer().scheduleAtFixedRate(tasknew,0,10);	// dieser Block berechnet die X Koordinate unseres Stickmans
+			kampftest= true; //teilt mit, dass die Einheit bereit zum kämpfen ist
+			
+		testhit();
 	
-	ImageView testnu = takeout2();
-	
-	AbsoluteLayout rl = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame); //Position des ImageViews
-	AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(350, 350,0,300);
-	rl.addView(testnu, lp); 
-	takeout(testnu);
-	
-	timerstartbool=true; //Bedinung damit der Zähler zählt
-	tasknew = new TimerAddX(); //Startet den Zähler für die X Berechnung
-	new Timer().scheduleAtFixedRate(tasknew,0,10);	// dieser Block berechnet die X Koordinate unseres Stickmans
-	kampftest= true; //teilt mit, dass die Einheit bereit zum kämpfen ist
-	
-	hitboxen hitbox1 = new hitboxen(); 
-	hitbox1.start(); //checkt ob hitboxen für diese Einheit getriggert werden
-		 }
 	
 	TimerTask timetask = new TimerTask() { //falls hitboxenerkennung dann kampfanimation
 		
@@ -287,6 +318,43 @@ public void SpawnSoldat(View Buttonsoldat) //onClick Funktion, spawn Soldaten
 	};
 	Timer t1 = new Timer();
 	t1.schedule(timetask, 0, 100); //es wird alle zehntel sekunde gecheckt, ob die hitbox etwas getroffen hat
+		 }
+}
+
+private void testhit() {
+	TimerTask hitboxtask = new TimerTask() { //hitboxerkennung
+		
+		@Override
+		public void run() {
+			if (kampftest==true && hitboxtest==true && kampftestg == true) //wenn eine eigene Einheit gespawnt ist und eine Gegner Einheit
+			{
+				Log.d("Hitboxen","Hitboxen werden aufgerufen");
+				
+				if(tasknew.getXx()>=(tasknewg.xxg-130)) // HITBOXEN! Einheit-X-Wert und Gegner-X-Wert
+				{
+					Log.d("Kampf","Es wird gekämpft"); 
+					hitboxtest=false; //hört auf weiter zu checken
+					threadzurueck = true; //gibt zurueck, dass die hitbox mit etwas kollidiert
+					einheitistamlaufen =false;
+				}
+					
+			}
+			else if(kampftest==true && hitboxtest==true && kampftestg != true) //wenn nur eine eigene Einheit gespawnt ist
+			{
+				if(tasknew.getXx()>=820) //HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
+				{
+					Log.d("Kampf","Einheit läuft gegen die basis"); 
+					hitboxtest=false;//hört auf weiter zu checken
+					threadzurueck = true; //gibt zurueck, dass die hitbox mit etwas kollidiert
+					einheitistamlaufen=false;
+				}
+			}
+		}
+	};
+	Timer thitb = new Timer();
+	thitb.schedule(hitboxtask,0,100); 
+	hitboxen hitbox1 = new hitboxen(); 
+	hitbox1.start(); //checkt ob hitboxen für diese Einheit getriggert werden
 }
 
 
@@ -341,7 +409,7 @@ public void SpawnKrieger(View v) //onClick Funktion, spawnt Krieger -> Dieser Kn
 	s_walk_animation.setVisibility(View.VISIBLE);
 	s_walk_animation.startAnimation(stickman_walk_Animation());
 	
-	timerstartbool=true;
+	einheitistamlaufen=true;
 	
 
 	
@@ -451,37 +519,7 @@ public class hitboxen extends Thread {  // der Thread der für die hitbox berechn
 		Log.d("thread gestarten","...");
 		
 		
-		TimerTask hitboxtask = new TimerTask() { //hitboxerkennung
-			
-			@Override
-			public void run() {
-				if (kampftest==true && hitboxtest==true && kampftestg == true) //wenn eine eigene Einheit gespawnt ist und eine Gegner Einheit
-				{
-					Log.d("Hitboxen","Hitboxen werden aufgerufen");
-					
-					if(tasknew.xx>=(tasknewg.xxg-130)) // HITBOXEN! Einheit-X-Wert und Gegner-X-Wert
-					{
-						Log.d("Kampf","Es wird gekämpft"); 
-						hitboxtest=false; //hört auf weiter zu checken
-						threadzurueck = true; //gibt zurueck, dass die hitbox mit etwas kollidiert
-						timerstartbool =false;
-					}
-						
-				}
-				else if(kampftest==true && hitboxtest==true && kampftestg != true) //wenn nur eine eigene Einheit gespawnt ist
-				{
-					if(tasknew.xx>=820) //HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
-					{
-						Log.d("Kampf","Einheit läuft gegen die basis"); 
-						hitboxtest=false;//hört auf weiter zu checken
-						threadzurueck = true; //gibt zurueck, dass die hitbox mit etwas kollidiert
-						timerstartbool=false;
-					}
-				}
-			}
-		};
-		Timer thitb = new Timer();
-		thitb.schedule(hitboxtask,0,100); 
+		
 
 	
 
@@ -505,7 +543,7 @@ public class hitboxen_gegner extends Thread {  // der Thread der für die hitbox 
 				{
 					Log.d("Hitboxen","Hitboxen Gegern werden aufgerufen");
 					
-					if(tasknewg.xxg<=(tasknew.xx+130))
+					if(tasknewg.xxg<=(tasknew.getXx()+130))
 					{
 						Log.d("Kampf","Es wird gekämpft");
 						hitboxtestg=false;
@@ -532,28 +570,12 @@ public class hitboxen_gegner extends Thread {  // der Thread der für die hitbox 
 
 	
 	}
+	
+	
 		
 }
 
 
-
-  
-        class TimerAddX extends TimerTask { // gibt den X wert des eigenen Stickmans an
-        	public int xx = 0;
-        	public int getXx() {
-        		return xx;
-        	}
-        	public void setXx(int xx) {
-        		this.xx = xx;
-        	} 
-        	public void run() {
-        		  if(timerstartbool==true){
-        		  xx = xx+1;
-        		//  Log.d("x","x wurde erhöht");
-        		  
-        		  }
-        	  }
-        	}
         
         
         class TimerAddXG extends TimerTask { //gibt den X wert des gegnerischen Stickmans an
@@ -574,6 +596,7 @@ public class hitboxen_gegner extends Thread {  // der Thread der für die hitbox 
         
         }
 
+
         
         private class Einheit {
         	private static final int DELAYTOSPEED = 10;
@@ -584,13 +607,14 @@ public class hitboxen_gegner extends Thread {  // der Thread der für die hitbox 
         	private int einheitart;
         	private boolean angehauen = false;
         	
-        	ImageView thispic;
-        	
 
 
         	public Einheit(){
-        		
+        			
         	}
+
+        	
+        	
 
         }
 

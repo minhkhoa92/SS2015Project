@@ -398,6 +398,39 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 	t1.schedule(timetask, 0, 100); //es wird alle zehntel sekunde gecheckt, ob die hitbox etwas getroffen hat
 }
 
+private void testhitboxfeind() {
+	if (kampftestg == true && hitboxtestg==true && kampftest == true)
+	{
+//		Log.d("Hitboxen","Hitboxen Gegern werden aufgerufen");
+		boolean istschondarueber = false;
+		int xeigen = 0;
+		for (Einheit nocheinheit : allunits) {
+			if (!nocheinheit.isEnemy() && !istschondarueber) {
+				xeigen = nocheinheit.getXx();
+				istschondarueber = true;
+			}
+		}
+		
+		if (allunits.get(1).getXx()<=(xeigen+130))
+		{
+			Log.d("Kampf","Es wird gekämpft");
+			allunits.get(1).setamlaufen(false);
+			allunits.get(1).setKaempfen(true);
+		}
+		
+	}
+	else if(kampftestg==true && hitboxtestg==true && kampftest != true) //wenn nur eine gegnerische  Einheit gespawnt ist
+	{
+		if(allunits.get(1).getXx()<=60) //HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
+		{
+			Log.d("Kampf","GegnerEinheit läuft gegen die basis"); 
+			hitboxtestg=false;//hört auf weiter zu checken
+			allunits.get(1).setKaempfen(true); //gibt zurueck, dass die hitbox mit etwas kollidiert
+			timerstartboolg=false;
+		}
+	}
+}
+
 private void kaempfen(Einheit aneinheit) {
 	int index = allunits.indexOf(aneinheit);
 	Log.w("ein index muss 0", Integer.toString(index));
@@ -579,36 +612,7 @@ public class hitboxen_gegner extends Thread {  // der Thread der für die hitbox 
 			
 			@Override
 			public void run() {
-				if (kampftestg == true && hitboxtestg==true && kampftest == true)
-				{
-//					Log.d("Hitboxen","Hitboxen Gegern werden aufgerufen");
-					boolean istschondarueber = false;
-					int xeigen = 0;
-					for (Einheit nocheinheit : allunits) {
-						if (!nocheinheit.isEnemy() && !istschondarueber) {
-							xeigen = nocheinheit.getXx();
-							istschondarueber = true;
-						}
-					}
-					
-					if (allunits.get(1).getXx()<=(xeigen+130))
-					{
-						Log.d("Kampf","Es wird gekämpft");
-						allunits.get(1).setamlaufen(false);
-						allunits.get(1).setKaempfen(true);
-					}
-					
-				}
-				else if(kampftestg==true && hitboxtestg==true && kampftest != true) //wenn nur eine gegnerische  Einheit gespawnt ist
-				{
-					if(allunits.get(1).getXx()<=60) //HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
-					{
-						Log.d("Kampf","GegnerEinheit läuft gegen die basis"); 
-						hitboxtestg=false;//hört auf weiter zu checken
-						allunits.get(1).setKaempfen(true); //gibt zurueck, dass die hitbox mit etwas kollidiert
-						timerstartboolg=false;
-					}
-				}
+				testhitboxfeind();
 			}
 		};
 		Timer thitbg = new Timer();

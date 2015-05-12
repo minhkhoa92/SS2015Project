@@ -66,67 +66,6 @@ boolean running=true;
 
 //Variable von Alex Ende
 	
-	
-	
-	private TranslateAnimation stickman_walk_Animation(){ //Bewegung des eigenen stickmans
-		
-		
-	    TranslateAnimation stickman_walking_animation = new TranslateAnimation(0.0f, 1000.0f,0.0f, 0.0f);
-	    stickman_walking_animation.setInterpolator(new LinearInterpolator());
-	    stickman_walking_animation.setDuration(10000);
-	    stickman_walking_animation.setRepeatCount(0);
-	    stickman_walking_animation.setRepeatMode(0);
-	    stickman_walking_animation.setFillAfter(false); 
-	    return stickman_walking_animation;
-	    };
-	private TranslateAnimation stickman_walk_Animation_gegner(){ //Bewegung des gegnerischen Stickmans
-
-			
-		    TranslateAnimation stickman_walking_animation_gegner = new TranslateAnimation(0.0f, -1000.0f,0.0f, 0.0f);
-	        stickman_walking_animation_gegner.setInterpolator(new LinearInterpolator());
-	        stickman_walking_animation_gegner.setDuration(10000);
-	        stickman_walking_animation_gegner.setRepeatCount(0);
-	        stickman_walking_animation_gegner.setRepeatMode(0);
-	        stickman_walking_animation_gegner.setFillAfter(false); 
-	        return stickman_walking_animation_gegner;
-	        };   
-	        
-	        
-	        class TimerAddX extends TimerTask { // gibt den X wert des eigenen Stickmans an
-	        	public int xx = 0;
-	        	public int getXx() {
-	        		return xx;
-	        	}
-	        	public void setXx(int xx) {
-	        		this.xx = xx;
-	        	} 
-	        	public void run() {
-	        		  if(timerstartbool==true){
-	        		  xx = xx+1;
-	        		//  Log.d("x","x wurde erhöht");
-	        		  
-	        		  }
-	        	  }
-	        	}
-	        
-	        
-	        class TimerAddXG extends TimerTask { //gibt den X wert des gegnerischen Stickmans an
-	        	public int xxg = 900;
-	        	public int getXxg() {
-	        		return xxg;
-	        	}
-	        	public void setXxg(int xxg) {
-	        		this.xxg = xxg;
-	        	} 
-	        	public void run() {
-	        		  if(timerstartboolg==true){
-	        		  xxg = xxg-1;
-	        		 // Log.d("xg","xg wurde verkleinert");
-	        		  
-	        		  }
-	        	  }
-	        
-	        }
 	        
 	@Override
 	public void onCreate(Bundle savedInstanceState) { // passiert wenn die Activity erstellt wird
@@ -195,25 +134,15 @@ boolean running=true;
 				//Goldschleife von Alex Ende
 			    
 			    
-			    
-			    
-			    
-			    
-			    
-			    
 	    }
 	 
-	
-
-	
-	
-	
-	
 	
 	protected void onStart(){ //passiert wenn die Activity gestartet wird
 		super.onStart();
 	Log.d("Start","Act.Start");
 	}
+	
+
 	
 /*	protected void onResume(){ //passiert nach onStart() braucht ihr gerade eigentlich nicht beachten
 		super.onResume();
@@ -340,6 +269,47 @@ public void SpawnSoldat(View Buttonsoldat) //onClick Funktion, spawn Soldaten
 	t1.schedule(timetask, 0, 100); //es wird alle zehntel sekunde gecheckt, ob die hitbox etwas getroffen hat
 }
 
+
+
+public void spielVerlieren(View v){ //muss nachher in eine If bedingung in einen Timer rein, die z.B. alles halbe sekunde checkt, ob eine Base zerstört ist
+	
+	Intent intent = new Intent (this, LoseActivity.class);
+	startActivity(intent);
+	finish();
+}
+
+public void spielGewinnen(View v){ //muss nachher in eine If bedingung in einen Timer rein, die z.B. alles halbe sekunde checkt, ob eine Base zerstört ist
+	
+	Intent intent = new Intent (this, WinActivity.class);
+	startActivity(intent);
+	finish();
+}
+
+
+private TranslateAnimation stickman_walk_Animation(){ //Bewegung des eigenen stickmans
+	
+	
+    TranslateAnimation stickman_walking_animation = new TranslateAnimation(0.0f, 1000.0f,0.0f, 0.0f);
+    stickman_walking_animation.setInterpolator(new LinearInterpolator());
+    stickman_walking_animation.setDuration(10000);
+    stickman_walking_animation.setRepeatCount(0);
+    stickman_walking_animation.setRepeatMode(0);
+    stickman_walking_animation.setFillAfter(false); 
+    return stickman_walking_animation;
+    };
+private TranslateAnimation stickman_walk_Animation_gegner(){ //Bewegung des gegnerischen Stickmans
+
+		
+	    TranslateAnimation stickman_walking_animation_gegner = new TranslateAnimation(0.0f, -1000.0f,0.0f, 0.0f);
+        stickman_walking_animation_gegner.setInterpolator(new LinearInterpolator());
+        stickman_walking_animation_gegner.setDuration(10000);
+        stickman_walking_animation_gegner.setRepeatCount(0);
+        stickman_walking_animation_gegner.setRepeatMode(0);
+        stickman_walking_animation_gegner.setFillAfter(false); 
+        return stickman_walking_animation_gegner;
+        };   
+        
+      
 @SuppressWarnings("deprecation")
 public void SpawnKrieger(View v) //onClick Funktion, spawnt Krieger -> Dieser Knopf lässt gerade den gegnerischen Stickman sterben und lässt unseren an der Stelle weiterlaufen. wo er zuletzt gekämpft hat
 {
@@ -463,6 +433,8 @@ TimerTask timetaskg = new TimerTask() { //falls hitboxenerkennung  kampfanimatio
 	tg.schedule(timetaskg, 0, 100); 
 }
 
+
+
 public class hitboxen extends Thread {  // der Thread der für die hitbox berechnung zuständig ist
 	public void run(){
 		Log.d("thread gestarten","...");
@@ -554,31 +526,42 @@ public class hitboxen_gegner extends Thread {  // der Thread der für die hitbox 
 
 
 
-
-
-
-public void spielVerlieren(View v){ //muss nachher in eine If bedingung in einen Timer rein, die z.B. alles halbe sekunde checkt, ob eine Base zerstört ist
-	
-	Intent intent = new Intent (this, LoseActivity.class);
-	startActivity(intent);
-	finish();
-}
-
-public void spielGewinnen(View v){ //muss nachher in eine If bedingung in einen Timer rein, die z.B. alles halbe sekunde checkt, ob eine Base zerstört ist
-	
-	Intent intent = new Intent (this, WinActivity.class);
-	startActivity(intent);
-	finish();
-}
-
-
-
-
-
-
-
-
-
+  
+        class TimerAddX extends TimerTask { // gibt den X wert des eigenen Stickmans an
+        	public int xx = 0;
+        	public int getXx() {
+        		return xx;
+        	}
+        	public void setXx(int xx) {
+        		this.xx = xx;
+        	} 
+        	public void run() {
+        		  if(timerstartbool==true){
+        		  xx = xx+1;
+        		//  Log.d("x","x wurde erhöht");
+        		  
+        		  }
+        	  }
+        	}
+        
+        
+        class TimerAddXG extends TimerTask { //gibt den X wert des gegnerischen Stickmans an
+        	public int xxg = 900;
+        	public int getXxg() {
+        		return xxg;
+        	}
+        	public void setXxg(int xxg) {
+        		this.xxg = xxg;
+        	} 
+        	public void run() {
+        		  if(timerstartboolg==true){
+        		  xxg = xxg-1;
+        		 // Log.d("xg","xg wurde verkleinert");
+        		  
+        		  }
+        	  }
+        
+        }
 
 
 }

@@ -137,6 +137,7 @@ boolean running=true;
 		Log.d("Start","Act.Start");
 		allunits = new ArrayList<GameActivity.Einheit>();
 		einheitbilder = new ArrayList<ImageView>();
+		testhitundkampf();
 	}
 	
 	
@@ -228,7 +229,7 @@ public void SpawnSoldat(View Buttonsoldat) //onClick Funktion, spawn Soldaten
 	if(zaehler>=20)
 		 {
 			zaehler=zaehler-20;	//zaehler ist der Goldwert, der Soldat kostet gerade 20 Gold
-			Einheit eigeneeinheit = new Einheit(false);
+			Einheit eigeneeinheit = new Einheit(false, ARTSOLDAT);
 			int meinindex = endofarray;
 			allunits.add(meinindex, eigeneeinheit);
 			eigenersoldatpic();
@@ -239,15 +240,101 @@ public void SpawnSoldat(View Buttonsoldat) //onClick Funktion, spawn Soldaten
 			gebelaufanim(einheitbilder.get(meinindex));
 			
 			
-			allunits.get(meinindex).einheitistamlaufen=true; //Bedinung damit der Zähler zählt
+			allunits.get(meinindex).setEinheitistamlaufen(true); //Bedinung damit der Zähler zählt
 			
 			//Startet den Zähler für die X Berechnung
 			allunits.get(meinindex).startwalktimer();
 			// dieser Block berechnet die X Koordinate unseres Stickmans
 			kampftest= true; //teilt mit, dass die Einheit bereit zum kämpfen ist
+			endofarray++;
+	}
+}
+
+private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstart
+	TimerTask hitboxtask = new TimerTask() { //hitboxerkennung
+		
+		@Override
+		public void run() {
+			if (kampftest==true && hitboxtest==true && kampftestg == true) //wenn eine eigene Einheit gespawnt ist und eine Gegner Einheit
+			{
+				Log.d("Hitboxen","Hitboxen werden aufgerufen");
+				Einheit aneinheit = null;
+				int i = 0;
+				while (aneinheit == null && i < allunits.size()) {
+					if (!allunits.get(i).isEnemy());
+						aneinheit = allunits.get(i);
+
+					i++;
+				}
+				if(aneinheit != null) {
+					if(aneinheit.getXx() >= (tasknewg.xxg-130)) // HITBOXEN! Einheit-X-Wert und Gegner-X-Wert
+					{
+						Log.d("Kampf","Es wird gekämpft"); 
+						hitboxtest=false; //hört auf weiter zu checken
+						soebenKollision = true; //gibt zurueck, dass die hitbox mit etwas kollidiert
+						aneinheit.setEinheitistamlaufen(false);
+					}
+					else if(kampftest==true && hitboxtest==true && kampftestg != true) //wenn nur eine eigene Einheit gespawnt ist
+					{
+						if(aneinheit.getXx()>=820) //HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
+						{
+							Log.d("Kampf","Einheit läuft gegen die basis"); 
+							hitboxtest=false;//hört auf weiter zu checken
+							soebenKollision = true; //gibt zurueck, dass die hitbox mit etwas kollidiert
+							aneinheit.setEinheitistamlaufen(false);
+						}
+					}
+				}
+			}
+				
 			
-		testhit();
+		}
+	};
+	Timer thitb = new Timer();
+	thitb.schedule(hitboxtask,0,100); 
 	
+	/*
+	TimerTask hitboxtaskg = new TimerTask() { //hitboxerkennung
+		
+		@Override
+		public void run() {
+			if (kampftestg == true && hitboxtestg==true && kampftest == true)
+			{
+				Log.d("Hitboxen","Hitboxen Gegern werden aufgerufen");
+				boolean istschondarueber = false;
+				int xeigen = 0;
+				for (Einheit eineeinheit : allunits) {
+					if (!eineeinheit.isEnemy() && !istschondarueber) {
+						xeigen = eineeinheit.getXx();
+						istschondarueber = true;
+					}
+				}
+				
+				if(tasknewg.xxg<=(xeigen+130))
+				{
+					Log.d("Kampf","Es wird gekämpft");
+					hitboxtestg=false;
+					threadzurueckg = true;
+					
+					
+				}
+				
+			}
+			else if(kampftestg==true && hitboxtestg==true && kampftest != true) //wenn nur eine gegnerische  Einheit gespawnt ist
+			{
+				if(tasknewg.xxg<=60) //HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
+				{
+					Log.d("Kampf","GegnerEinheit läuft gegen die basis"); 
+					hitboxtestg=false;//hört auf weiter zu checken
+					threadzurueckg = true; //gibt zurueck, dass die hitbox mit etwas kollidiert
+					timerstartboolg=false;
+				}
+			}
+		}
+	};
+	Timer thitbg = new Timer();
+	thitbg.schedule(hitboxtaskg,0, 100);
+	*/
 	
 	TimerTask timetask = new TimerTask() { //falls hitboxenerkennung dann kampfanimation
 		
@@ -266,6 +353,7 @@ public void SpawnSoldat(View Buttonsoldat) //onClick Funktion, spawn Soldaten
 				
 				kampf_animation = new ImageView(GameActivity.this); // und erstelle hier die Kampfanimation
 				kampf_animation.setImageResource(R.drawable.anim_stickman_kampf);
+				@SuppressWarnings("deprecation")
 				AbsoluteLayout al = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame);
 				int x = 0;
 				boolean warschonerste = true;
@@ -276,6 +364,7 @@ public void SpawnSoldat(View Buttonsoldat) //onClick Funktion, spawn Soldaten
 						}
 				}// hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
 				
+				@SuppressWarnings("deprecation")
 				AbsoluteLayout.LayoutParams lp2 = new AbsoluteLayout.LayoutParams(
 						s_walk_animation.getHeight(), 
 						+s_walk_animation.getWidth(),
@@ -290,52 +379,10 @@ public void SpawnSoldat(View Buttonsoldat) //onClick Funktion, spawn Soldaten
 			kampfanimtest=true; //hier wird mitgeteilt, dass die Einheit aktuell kämpft ( wenn also die Einheit nachher einen Gegner tötet, wird diese Variable wieder false
 			}		
 		
-	};
+		};
 	};
 	Timer t1 = new Timer();
 	t1.schedule(timetask, 0, 100); //es wird alle zehntel sekunde gecheckt, ob die hitbox etwas getroffen hat
-		 }
-}
-
-private void testhit() {
-	TimerTask hitboxtask = new TimerTask() { //hitboxerkennung
-		
-		@Override
-		public void run() {
-			if (kampftest==true && hitboxtest==true && kampftestg == true) //wenn eine eigene Einheit gespawnt ist und eine Gegner Einheit
-			{
-				Log.d("Hitboxen","Hitboxen werden aufgerufen");
-				
-				for ( Einheit aneinheit : allunits) {
-					if (!aneinheit.isEnemy()){
-						if(aneinheit.getXx()>=(tasknewg.xxg-130)) // HITBOXEN! Einheit-X-Wert und Gegner-X-Wert
-						{
-							Log.d("Kampf","Es wird gekämpft"); 
-							hitboxtest=false; //hört auf weiter zu checken
-							soebenKollision = true; //gibt zurueck, dass die hitbox mit etwas kollidiert
-							aneinheit.setEinheitistamlaufen(false);
-						}
-							
-					
-						else if(kampftest==true && hitboxtest==true && kampftestg != true) //wenn nur eine eigene Einheit gespawnt ist
-						{
-							if(aneinheit.getXx()>=820) //HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
-							{
-								Log.d("Kampf","Einheit läuft gegen die basis"); 
-								hitboxtest=false;//hört auf weiter zu checken
-								soebenKollision = true; //gibt zurueck, dass die hitbox mit etwas kollidiert
-								aneinheit.setEinheitistamlaufen(false);
-							}
-						}
-					}
-				}
-			}
-		}
-	};
-	Timer thitb = new Timer();
-	thitb.schedule(hitboxtask,0,100); 
-	hitboxen hitbox1 = new hitboxen(); 
-	hitbox1.start(); //checkt ob hitboxen für diese Einheit getriggert werden
 }
 
 
@@ -498,23 +545,6 @@ TimerTask timetaskg = new TimerTask() { //falls hitboxenerkennung  kampfanimatio
 }
 
 
-
-public class hitboxen extends Thread {  // der Thread der für die hitbox berechnung zuständig ist
-	public void run(){
-		Log.d("thread gestarten","...");
-		
-		
-		
-
-	
-
-	}	
-}
-
-
-
-
-
 public class hitboxen_gegner extends Thread {  // der Thread der für die hitbox berechnung einer Gegnereinheit zuständig ist 
 	public void run(){
 		Log.d("thread gestarten","...");
@@ -598,14 +628,15 @@ public class hitboxen_gegner extends Thread {  // der Thread der für die hitbox 
         	private boolean einheitistamlaufen = false;
         	boolean hitboxtest = true;
 
-        	private int einheitart;
+        	private char einheitart;
         	private boolean angehauen = false;
         	private boolean enemy;
 
 
-        	public Einheit(boolean isenemy){
+        	public Einheit(boolean isenemy, char kategorie){
         			xx = 0;
         			enemy = isenemy;
+        			einheitart = kategorie;
         	}
 
 			public void startwalktimer() {

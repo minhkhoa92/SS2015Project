@@ -256,10 +256,10 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 		
 		@Override
 		public void run() {
-			if (!allunits.isEmpty()) {
+			if (!allunits.isEmpty()) { //wenn keine Einheit da ist
 				Einheit aneinheit = null;
 				int i = 0;
-				while (aneinheit == null && i < allunits.size() && !allunits.isEmpty()) {
+				while (aneinheit == null && i < allunits.size()) {
 					// schaut nach eigenen Einheiten nach und ob sie laufen
 					// wenn laufen == true heisst das sie sind bereit zum kaempfen oder warten
 					if (!allunits.get(i).isEnemy() && allunits.get(i).isamlaufen())
@@ -267,6 +267,7 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 	
 					i++;
 				}
+				testhitboxfeind();
 				if (kampftestg == true) //wenn eine eigene Einheit gespawnt ist und eine Gegner Einheit
 				{
 //					Log.d("Hitboxen","Hitboxen werden aufgerufen");
@@ -554,9 +555,7 @@ public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
 	allunits.get(meinindex).setamlaufen(true);
 
 	kampftestg = true;
-	
-	hitboxen_gegner hitbox1 = new hitboxen_gegner(); 
-	hitbox1.start();
+
 	endofarray++;
 	
 TimerTask timetaskg = new TimerTask() { //falls hitboxenerkennung  kampfanimation
@@ -601,26 +600,6 @@ TimerTask timetaskg = new TimerTask() { //falls hitboxenerkennung  kampfanimatio
 	Timer tg = new Timer();
 	tg.schedule(timetaskg, 0, 100); 
 }
-
-
-public class hitboxen_gegner extends Thread {  // der Thread der für die hitbox berechnung einer Gegnereinheit zuständig ist 
-	public void run(){
-		Log.d("thread gestarten","...");
-		
-		
-		TimerTask hitboxtaskg = new TimerTask() { //hitboxerkennung
-			
-			@Override
-			public void run() {
-				testhitboxfeind();
-			}
-		};
-		Timer thitbg = new Timer();
-		thitbg.schedule(hitboxtaskg,0, 100);
-	}
-
-}
-
 
   
         private class Einheit {

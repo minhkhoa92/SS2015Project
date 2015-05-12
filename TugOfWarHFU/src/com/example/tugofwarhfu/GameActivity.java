@@ -1,37 +1,24 @@
 package com.example.tugofwarhfu;
 
-import java.io.IOException;
-import java.io.InputStream;
+
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.lang.Thread;
 
 import android.app.Activity;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.AbsoluteLayout;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
 import android.graphics.drawable.AnimationDrawable;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.MotionEvent;
-import android.view.View.OnClickListener;
-import android.view.animation.CycleInterpolator;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.TranslateAnimation;
-import android.view.animation.Interpolator;
 
 
 public class GameActivity extends Activity {
@@ -154,9 +141,6 @@ boolean running=true;
 	
 	
 	private boolean kampftest = false;
-	private int xx = 0;
-	
-	
     
 	ImageView s_walk_animation;
 	
@@ -283,8 +267,6 @@ public void SpawnSoldat(View Buttonsoldat) //onClick Funktion, spawn Soldaten
 				kampf_animation = new ImageView(GameActivity.this); // und erstelle hier die Kampfanimation
 				kampf_animation.setImageResource(R.drawable.anim_stickman_kampf);
 				AbsoluteLayout al = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame);
-				int height;
-				int width ;
 				int x = 0;
 				boolean warschonerste = true;
 				for (Einheit eineEinheit : allunits) {
@@ -293,13 +275,12 @@ public void SpawnSoldat(View Buttonsoldat) //onClick Funktion, spawn Soldaten
 						warschonerste = false;
 						}
 				}// hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
-				int y;
 				
 				AbsoluteLayout.LayoutParams lp2 = new AbsoluteLayout.LayoutParams(
-						height = s_walk_animation.getHeight(), 
-						width = s_walk_animation.getWidth(),
+						s_walk_animation.getHeight(), 
+						+s_walk_animation.getWidth(),
 						x,
-						y = s_walk_animation.getTop());
+						+s_walk_animation.getTop()); //in welcher Hoehe neu ein ImageView gespawnt wird
 						
 				al.addView(kampf_animation, lp2);  
 				
@@ -492,16 +473,15 @@ TimerTask timetaskg = new TimerTask() { //falls hitboxenerkennung  kampfanimatio
 				kampf_animation_g = new ImageView(GameActivity.this);
 				kampf_animation_g.setImageResource(R.drawable.anim_stickman_kampf_g);
 				AbsoluteLayout al = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame);
-				int height;
-				int width ;
+
 				int x = tasknewg.getXxg(); // hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
-				int y;
+
 				
 				AbsoluteLayout.LayoutParams lp2 = new AbsoluteLayout.LayoutParams(
-						height = s_walk_animation_g.getHeight(), 
-						width = s_walk_animation_g.getWidth(),
+						s_walk_animation_g.getHeight(), 
+						s_walk_animation_g.getWidth(),
 						x,
-						y = s_walk_animation_g.getTop());
+						s_walk_animation_g.getTop());
 						
 				al.addView(kampf_animation_g, lp2);  
 				
@@ -628,19 +608,10 @@ public class hitboxen_gegner extends Thread {  // der Thread der für die hitbox 
         			enemy = isenemy;
         	}
 
-        	
-
 			public void startwalktimer() {
-				new Timer().scheduleAtFixedRate(new TimerAddX(),0,10);
+				new Timer().scheduleAtFixedRate(new TimerAddX(), 0, DELAYTOSPEED);
 			}
 
-
-
-			public boolean isEinheitistamlaufen() {
-				return einheitistamlaufen;
-			}
-
-			
 
 			public void setEinheitistamlaufen(boolean einheitistamlaufen) {
 				this.einheitistamlaufen = einheitistamlaufen;
@@ -649,9 +620,6 @@ public class hitboxen_gegner extends Thread {  // der Thread der für die hitbox 
 			public int getXx() {
         		return xx;
         	}
-        	public void setXx(int xnew) {
-        		xx = xnew;
-        	} 
         	
 			public boolean isEnemy() {
 				return enemy;

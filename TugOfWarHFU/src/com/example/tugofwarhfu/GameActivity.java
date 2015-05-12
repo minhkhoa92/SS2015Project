@@ -2,6 +2,7 @@ package com.example.tugofwarhfu;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.lang.Thread;
@@ -33,7 +34,7 @@ import android.view.animation.Interpolator;
 
 
 public class GameActivity extends Activity {
-	ImageView s_walk_animation;
+
 	ImageView s_fight_animation;
 	ImageView s_walk_animation_g;
 	TimerAddX tasknew;
@@ -52,7 +53,7 @@ public class GameActivity extends Activity {
 	private boolean kampfanimtest = false;
 	private boolean kampfanimtestg = false;
 	
-	
+	ArrayList<Einheit> allunits;
 	//Variablen von ALex
 	
 
@@ -142,7 +143,28 @@ boolean running=true;
 	Log.d("Start","Act.Start");
 	}
 	
-
+	ImageView s_walk_animation;
+	private ImageView takeout2() {
+		ImageView testnu = new ImageView(GameActivity.this);  // erstellung eines neuen ImageViews für jeden Knopfdruck
+		testnu.setImageResource(R.drawable.anim_stickman_walking);
+		return testnu;
+	}
+	
+	private void takeout(ImageView testnu) {
+		s_walk_animation = (ImageView) testnu;
+		s_walk_animation.setVisibility(View.VISIBLE);
+		s_walk_animation.startAnimation(stickman_walk_Animation()); // das neue image view wird sichtbar gemacht und ihm wird die animation zugewiesen
+	}
+	
+	private TranslateAnimation stickman_walk_Animation(){ //Bewegung des eigenen stickmans
+	    TranslateAnimation stickman_walking_animation = new TranslateAnimation(0.0f, 1000.0f,0.0f, 0.0f);
+	    stickman_walking_animation.setInterpolator(new LinearInterpolator());
+	    stickman_walking_animation.setDuration(10000);
+	    stickman_walking_animation.setRepeatCount(0);
+	    stickman_walking_animation.setRepeatMode(0);
+	    stickman_walking_animation.setFillAfter(false); 
+	    return stickman_walking_animation;
+	    };
 	
 /*	protected void onResume(){ //passiert nach onStart() braucht ihr gerade eigentlich nicht beachten
 		super.onResume();
@@ -199,6 +221,8 @@ boolean running=true;
 @SuppressWarnings("deprecation")
 public void SpawnSoldat(View Buttonsoldat) //onClick Funktion, spawn Soldaten
 {
+	allunits = new ArrayList<GameActivity.Einheit>();
+	allunits.add(new Einheit());
 	Log.d("Soldat", "Soldat wird gespawnt!");
 	
 	if(zaehler>=20)
@@ -206,16 +230,12 @@ public void SpawnSoldat(View Buttonsoldat) //onClick Funktion, spawn Soldaten
 		zaehler=zaehler-20;	//zaehler ist der Goldwert, der Soldat kostet gerade 20 Gold
 		 
 	
-	ImageView testnu = new ImageView(GameActivity.this);  // erstellung eines neuen ImageViews für jeden Knopfdruck
-	testnu.setImageResource(R.drawable.anim_stickman_walking);
+	ImageView testnu = takeout2();
 	
 	AbsoluteLayout rl = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame); //Position des ImageViews
 	AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(350, 350,0,300);
 	rl.addView(testnu, lp); 
-	
-	s_walk_animation = (ImageView) testnu;
-	s_walk_animation.setVisibility(View.VISIBLE);
-	s_walk_animation.startAnimation(stickman_walk_Animation()); // das neue image view wird sichtbar gemacht und ihm wird die animation zugewiesen
+	takeout(testnu);
 	
 	timerstartbool=true; //Bedinung damit der Zähler zählt
 	tasknew = new TimerAddX(); //Startet den Zähler für die X Berechnung
@@ -286,17 +306,8 @@ public void spielGewinnen(View v){ //muss nachher in eine If bedingung in einen 
 }
 
 
-private TranslateAnimation stickman_walk_Animation(){ //Bewegung des eigenen stickmans
-	
-	
-    TranslateAnimation stickman_walking_animation = new TranslateAnimation(0.0f, 1000.0f,0.0f, 0.0f);
-    stickman_walking_animation.setInterpolator(new LinearInterpolator());
-    stickman_walking_animation.setDuration(10000);
-    stickman_walking_animation.setRepeatCount(0);
-    stickman_walking_animation.setRepeatMode(0);
-    stickman_walking_animation.setFillAfter(false); 
-    return stickman_walking_animation;
-    };
+
+    
 private TranslateAnimation stickman_walk_Animation_gegner(){ //Bewegung des gegnerischen Stickmans
 
 		
@@ -561,6 +572,26 @@ public class hitboxen_gegner extends Thread {  // der Thread der für die hitbox 
         		  }
         	  }
         
+        }
+
+        
+        private class Einheit {
+        	private static final int DELAYTOSPEED = 10;
+        	public int xx;
+        	
+        	boolean hitboxtest = true;
+
+        	private int einheitart;
+        	private boolean angehauen = false;
+        	
+        	ImageView thispic;
+        	
+
+
+        	public Einheit(){
+        		
+        	}
+
         }
 
 

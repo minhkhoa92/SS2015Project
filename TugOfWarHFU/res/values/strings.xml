@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Tug of War HFU</string>
+    <string name="hello_world">Spiel starten!</string>
+    <string name="action_settings">Settings</string>
+    <string name="anleitung_string">In diesem Spiel geht es darum, die gegnerische Basis zu zerstören. Falls der Gegner jedoch deine Basis zerstört, verlierst du das Spiel!
+        </string>
+        <color name="Gold">#D7DF01</color>
+    
+
+</resources>

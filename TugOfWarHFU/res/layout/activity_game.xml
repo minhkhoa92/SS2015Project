@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AbsoluteLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/AbsoluteLayoutGame"
+   
+    tools:context=".GameActivity" >
+
+    <ImageView
+        android:id="@+id/Hintergrund"
+        android:layout_width="wrap_content"
+        android:layout_height="604dp"
+        android:layout_x="0dp"
+        android:layout_y="-100dp"
+        android:src="@drawable/hintergrund_real_version1" />
+
+    <ImageButton
+        android:id="@+id/imageButtonSoldat"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="14dp"
+        android:layout_marginLeft="13dp"
+        android:layout_x="10dp"
+        android:layout_y="307dp"
+        android:onClick="SpawnSoldat"
+        android:src="@drawable/ic_soldat" />
+
+    <ImageButton
+        android:id="@+id/imageButtonKrieger"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="13dp"
+        android:layout_x="88dp"
+        android:layout_y="309dp"
+        android:onClick="SpawnKrieger"
+        android:src="@drawable/ic_krieger" />
+
+    <ImageButton
+        android:id="@+id/imagePauseButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="28dp"
+        android:layout_x="178dp"
+        android:layout_y="322dp"
+        android:onClick="gamePause"
+        android:src="@android:drawable/ic_media_pause" />
+
+    <ImageView
+        android:id="@+id/stickman_walk"
+        android:layout_width="54dp"
+        android:layout_height="106dp"
+        
+        android:layout_x="23dp"
+        android:layout_y="-150dp"
+        android:contentDescription="Animation"
+        android:visibility="invisible" />
+
+    <ImageView
+        android:id="@+id/stickman_fight"
+        android:layout_width="91dp"
+        android:layout_height="96dp"
+        android:layout_x="73dp"
+        android:layout_y="161dp"
+        android:visibility="invisible" />
+
+    <ImageView
+        android:id="@+id/stickman_walk_gegner"
+        android:layout_width="91dp"
+        android:layout_height="96dp"
+        android:layout_x="373dp"
+        android:layout_y="161dp"
+        android:src="@drawable/anim_stickman_walking_g" 
+        android:visibility="invisible"/>
+
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_x="516dp"
+        android:layout_y="39dp"
+        android:onClick="spielGewinnen"
+        android:text="gewinnen" />
+
+    <Button
+        android:id="@+id/button1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_x="427dp"
+        android:layout_y="38dp"
+        android:onClick="spielVerlieren"
+        android:text="verlieren" />
+
+    <TextView
+        android:id="@+id/gold_anzeige"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_x="476dp"
+        android:layout_y="337dp"
+        android:text="Gold"
+        android:textColor="@color/Gold"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+    
+    </AbsoluteLayout> 
+

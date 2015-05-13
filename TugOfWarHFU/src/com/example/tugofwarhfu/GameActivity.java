@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.lang.Thread;
-import java.lang.Character.UnicodeBlock;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -48,6 +47,7 @@ public class GameActivity extends Activity {
 	private boolean threadzrueckg = false;
 	private boolean kampfanimtest = false;
 	private boolean kampfanimtestg = false;
+	private boolean kampftest = false;
 	
 
 	//Variablen von ALex
@@ -55,8 +55,8 @@ public class GameActivity extends Activity {
 
 ImageButton einheit;
 TextView sekunden_anzeige;
-TextView goldanzeige;
-int zaehler=100;
+TextView goldstand;
+int aktuellesguthaben=100;
 Handler gold_handler;
 boolean running=true;
 
@@ -94,7 +94,7 @@ boolean running=true;
 			    
 			    
 			    //Goldschleife von Alex
-			    goldanzeige=(TextView) findViewById(R.id.gold_anzeige);
+			    goldstand=(TextView) findViewById(R.id.gold_anzeige);
 				einheit=(ImageButton) findViewById(R.id.imageButtonSoldat);
 				gold_handler=new Handler();
 				
@@ -111,8 +111,8 @@ boolean running=true;
 									gold_handler.post(new Runnable(){
 										@Override
 										public void run(){
-											zaehler=zaehler+1;
-											goldanzeige.setText(String.valueOf("Gold "+zaehler));
+											aktuellesguthaben=aktuellesguthaben+1;
+											goldstand.setText(String.valueOf("Gold "+aktuellesguthaben));
 											
 											
 										}
@@ -142,10 +142,6 @@ boolean running=true;
 		testhitundkampf();
 	}
 	
-	
-	private boolean kampftest = false;
-    
-
 	
 	
 	private ImageView eigenersoldatpic() {
@@ -266,9 +262,9 @@ public void SpawnSoldat(View Buttonsoldat) //onClick Funktion, spawn Soldaten
 	
 	Log.d("Soldat", "Soldat wird gespawnt!");
 	
-	if(zaehler>=20)
+	if(aktuellesguthaben>=20)
 		 {
-			zaehler=zaehler-20;	//zaehler ist der Goldwert, der Soldat kostet gerade 20 Gold
+			aktuellesguthaben=aktuellesguthaben-20;	//zaehler ist der Goldwert, der Soldat kostet gerade 20 Gold
 			einheitbilder.add(endofarray, eigenersoldatpic());
 			Einheit eigeneeinheit = new Einheit(false, ARTSOLDAT);
 			int meinindex = endofarray;
@@ -319,38 +315,42 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 				}
 				
 				testhitboxfeind(feindeinheit, aneinheit);
-				if (kampftestg == true) //wenn eine eigene Einheit gespawnt ist und eine Gegner Einheit
-				{
-//					Log.d("Hitboxen","Hitboxen werden aufgerufen");
+				if(aneinheit != null) { //eigene Einheit da, die kaempft oder wartet
+					kampftest = true;
 					
-					if(aneinheit == null) { //keine eigene Einheit, die nicht kaempft oder wartet
-						kampftest = false;
+					if (kampftestg == true) //wenn eine eigene Einheit und eine Gegner Einheit gespawnt sind
+					{
+	//					Log.d("Hitboxen","Hitboxen werden aufgerufen");
+						if ( feindeinheit != null ) {
+							if(aneinheit.getXx() >= (feindeinheit.getXx() - ABSTANDZWEISOLDATEN)) // HITBOXEN! Einheit-X-Wert und Gegner-X-Wert
+							{
+								Log.d("Kampf","Es wird gekämpft");
+								soebenKollision = true; //gibt zurueck, dass die hitbox mit etwas kollidiert
+								aneinheit.setamlaufen(false);
+								kaempfen(aneinheit);
+							}
+						}
+					
 					}
-					else { // wenn eine eigene Einheit da ist
-						kampftest = true;
-						
-						if(aneinheit.getXx() >= (allunits.get(1).getXx() - ABSTANDZWEISOLDATEN)) // HITBOXEN! Einheit-X-Wert und Gegner-X-Wert
+					else if(kampftestg != true) //wenn nur eine eigene Einheit gespawnt ist
+					{
+						if(aneinheit.getXx() >= GRENZEFEINDLICHEBASIS) //HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
 						{
-							Log.d("Kampf","Es wird gekämpft");
+							Log.d("Kampf","Einheit läuft gegen die basis");
 							soebenKollision = true; //gibt zurueck, dass die hitbox mit etwas kollidiert
 							aneinheit.setamlaufen(false);
-							kaempfen(aneinheit);
 						}
-						
 					}
 				}
-				else if(kampftestg != true) //wenn nur eine eigene Einheit gespawnt ist
-				{
-					if(aneinheit.getXx() >= GRENZEFEINDLICHEBASIS) //HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
-					{
-						Log.d("Kampf","Einheit läuft gegen die basis");
-						soebenKollision = true; //gibt zurueck, dass die hitbox mit etwas kollidiert
-						aneinheit.setamlaufen(false);
-					}
+				else { // wenn keine eigene Einheit da ist
+					kampftest = false;
+					
+					
 				}
-				
 			}
+			
 		}
+		
 
 		
 	};
@@ -361,7 +361,7 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 	TimerTask timetask = new TimerTask() { //falls hitboxenerkennung dann kampfanimation von eigenen Einheiten
 		
 		public void run() { //hier wird die Kampfanimation abgespielt
-			if(soebenKollision==true && kampfanimtest ==false)
+			if(soebenKollision ==true && kampfanimtest ==false)
 			{
 				
 				runOnUiThread(new Runnable() { //über runOnUiThread() kann man auf die Imageviews aus dem Mainthread zu greifen
@@ -406,7 +406,7 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 				
 				}
 			});
-				
+			soebenKollision = false;
 			kampfanimtest=true; //hier wird mitgeteilt, dass die Einheit aktuell kämpft ( wenn also die Einheit nachher einen Gegner tötet, wird diese Variable wieder false
 			}		
 		
@@ -507,7 +507,6 @@ private void testhitboxfeind(Einheit feindeinheit, Einheit eigeneEin) {
 
 private void kaempfen(Einheit aneinheit) {
 	int index = allunits.indexOf(aneinheit);
-	Log.w("ein index muss 0", Integer.toString(index));
 	// TODO
 	
 }
@@ -527,38 +526,81 @@ public void spielGewinnen(View v){ //muss nachher in eine If bedingung in einen 
 	finish();
 }
 
-      
-      
-@SuppressWarnings("deprecation")
+public void toetegegner_und_weiterlaufen() {
+	aktuellesguthaben += 100;
+	
+	Einheit eigene = null;
+	int i = 0;
+	while (eigene == null && i < allunits.size()) {
+		if (allunits.get(i).isEnemy() == false)
+			eigene = allunits.get(i);
+
+		i++;
+	}
+	int eigenindex = allunits.indexOf(eigene);
+	
+	Einheit feindl = null;
+	i = 0;
+	while (feindl == null && i < allunits.size()) {
+		if (allunits.get(i).isEnemy() == true)
+			feindl = allunits.get(i);
+
+		i++;
+	}
+	int feindindex = allunits.indexOf(feindl);
+	
+	
+	einheitbilder.get(eigenindex).setImageDrawable(null);
+	einheitbilder.get(feindindex).setImageDrawable(null);
+	
+	einheitbilder.set(eigenindex, new ImageView(GameActivity.this));  // erstellung eines neuen ImageViews für jeden Knopfdruck
+	einheitbilder.get(eigenindex).setImageResource(R.drawable.anim_stickman_walking);
+	@SuppressWarnings("deprecation")
+	AbsoluteLayout rl = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame); //Position des ImageViews
+
+	int x = eigene.getXx();
+	@SuppressWarnings("deprecation")
+	AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(350, 350, x ,300);
+	rl.addView(einheitbilder.get(eigenindex), lp); 
+	allunits.get(eigenindex).setKaempfen(false);
+	
+	einheitbilder.remove(feindindex);
+	allunits.remove(feindindex);
+
+	kampfanimtest = false;
+	kampfanimtestg = false;
+	kampftest = true;
+	
+	feindl = null;
+	for (Einheit aEinheit : allunits) {
+		if (aEinheit.isEnemy()) feindl = aEinheit;
+	}
+	if (feindl == null) kampftestg = false;
+	
+	makegoagain();
+}
+
+private void makegoagain() {
+	Einheit eigene = null;
+	int i = 0;
+	while (eigene == null && i < allunits.size()) {
+		if (allunits.get(i).isEnemy() == false)
+			eigene = allunits.get(i);
+
+		i++;
+	}
+	int eigenindex = allunits.indexOf(eigene);
+	allunits.get(eigenindex).setamlaufen(true);
+	gebelaufanim(einheitbilder.get(eigenindex));
+}
+
 public void SpawnKrieger(View v) //onClick Funktion, spawnt Krieger -> Dieser Knopf lässt gerade den gegnerischen Stickman sterben und lässt unseren an der Stelle weiterlaufen. wo er zuletzt gekämpft hat
 {
 	
 	Log.d("kek","methode wird aufgerufen");
 
-	kampf_animation.setImageDrawable(null);
-	kampf_animation_g.setImageDrawable(null);
 	
-	ImageView testnu = new ImageView(GameActivity.this);  // erstellung eines neuen ImageViews für jeden Knopfdruck
-	testnu.setImageResource(R.drawable.anim_stickman_walking);
-	AbsoluteLayout rl = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame); //Position des ImageViews
-	for (Einheit eineEinh : allunits) {
-		eineEinh.setamlaufen(true);
-		int x= eineEinh.getXx();
-		AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(350, 350,x,300);
-		rl.addView(testnu, lp); 
-	}
-	
-	
-	
-	s_walk_animation = (ImageView) testnu;
-	s_walk_animation.setVisibility(View.VISIBLE);
-	s_walk_animation.startAnimation(stickman_walk_Animation());
-	
-	
-	
-	
-
-	
+	toetegegner_und_weiterlaufen();
 	
 /*	Log.d("Krieger", "Krieger wird gespawnt!"); // eig soll dieser Knopf einen Krieger spawnen, ich benutze ihn gerade zum test fürs kämpfen
 	s_walk_animation.setVisibility(View.GONE);
@@ -590,8 +632,6 @@ public void SpawnKrieger(View v) //onClick Funktion, spawnt Krieger -> Dieser Kn
 }
 
 
-	
-
 
 @SuppressWarnings("deprecation")
 public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
@@ -611,9 +651,8 @@ public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
 	allunits.get(meinindex).startwalktimer();
 	allunits.get(meinindex).setamlaufen(true);
 
-	
-	kampftestg = true;
 
+	kampftestg = true;
 	endofarray++;
 
 }
@@ -626,7 +665,6 @@ public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
         	private boolean laeuft = false;
 
         	private char einheitart;
-        	private boolean angehauen = false;
         	private boolean enemy;
         	private boolean kaempft = false;
 
@@ -645,6 +683,7 @@ public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
 
 			public void setamlaufen(boolean einheitistamlaufen) {
 				this.laeuft = einheitistamlaufen;
+				Log.w("test", "und geht");
 			}
 			
 			public boolean isamlaufen() {
@@ -684,12 +723,4 @@ public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
 
 }
 
-
-
-
-
-
-
-
-	
 	

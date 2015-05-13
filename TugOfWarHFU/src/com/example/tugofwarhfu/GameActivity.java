@@ -29,13 +29,13 @@ public class GameActivity extends Activity {
 	private final char ARTSOLDAT = 1;
 	private final int ABSTANDZWEISOLDATEN = 130;
 	private final int GRENZEFEINDLICHEBASIS = 820;
-	private final int BASEOWNINARRAY = 0;
-	private final int BASEENEINARRAY = 1;
 	
 	// Variablen Minh
 	ArrayList<Einheit> allunits;
 	ArrayList<ImageView> einheitbilder;
-	int endofarray = 2;
+	Einheit baseown;
+	Einheit baseenemy;
+	int endofarray = 0;
 	boolean soldatbuttonactive = true;
 	
 	ImageView s_fight_animation;
@@ -144,7 +144,10 @@ boolean running=true;
 		Log.d("Start","Act.Start");
 		allunits = new ArrayList<GameActivity.Einheit>();
 		einheitbilder = new ArrayList<ImageView>();
+		baseown = new Einheit(false, ARTBASE);
+		baseenemy = new Einheit(true, ARTBASE);
 		testhitundkampf();
+		
 	}
 	
 	
@@ -199,6 +202,7 @@ boolean running=true;
 		
 		einheitbilder.set(index, new ImageView(GameActivity.this)); // und erstelle hier die Kampfanimation
 		einheitbilder.get(index).setImageResource(R.drawable.anim_stickman_kampf);
+		allunits.get(index).setKaempfen(true);
 	}
 
 	private void animationlaufzukampfg (int index) {
@@ -207,6 +211,7 @@ boolean running=true;
 		
 		einheitbilder.set(index, new ImageView(GameActivity.this));
 		einheitbilder.get(index).setImageResource(R.drawable.anim_stickman_kampf_g);
+		allunits.get(index).setKaempfen(true);
 	}
 	
 /*	protected void onResume(){ //passiert nach onStart() braucht ihr gerade eigentlich nicht beachten
@@ -338,7 +343,6 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 								soebenKollision = true; //gibt zurueck, dass die hitbox mit etwas kollidiert
 								allunits.get(allunits.indexOf(aneinheit)).setKaempfen(true);
 								aneinheit.setamlaufen(false);
-								kaempfen(aneinheit);
 							}
 						}
 					
@@ -492,42 +496,47 @@ TimerTask timetaskg = new TimerTask() { //falls hitboxenerkennung  kampfanimatio
 		
 		@Override
 		public void run() {
-			Random rand = new Random();
-			boolean enemyfights = false , ownsoldierfights = false;
-			for (Einheit eine : allunits) {
-				if (eine.isKaempfen()) {
-					if (eine.isEnemy()) enemyfights = true;
-					else ownsoldierfights = true;
+			if (!allunits.isEmpty()) {
+				Random rand = new Random();
+				boolean enemyfights = false , ownsoldierfights = false;
+			
+				for (Einheit eine : allunits) {
+					if (eine.isKaempfen()) {
+						if (eine.isEnemy()) enemyfights = true;
+						else ownsoldierfights = true;
+					}
 				}
-			}
-			Einheit ownsold = null;
-			int i = 0, ownindex = 0;
-			while (ownsold == null && i < allunits.size()) {
-				if (!allunits.get(i).isEnemy())
-					ownsold = allunits.get(i);
-					ownindex = i;
-				i++;
-			}
-			Einheit enemysold = null;
-			i = 0; int enemyindex = 0;
-			while (enemysold == null && i < allunits.size()) {
-				if (!allunits.get(i).isEnemy())
-					enemysold = allunits.get(i);
-					enemyindex = i;
-				i++;
-			}
-			if (enemyfights && ownsoldierfights) {
-				
-				allunits.get(ownindex).bekommtschaden
-				(enemysold.getSchaden() + rand.nextInt(5));
-				allunits.get(enemyindex).bekommtschaden
-				(ownsold.getSchaden() + rand.nextInt(5));
-			}
-			if (enemyfights && !ownsoldierfights) {
-				allunits.get(BASEOWNINARRAY).bekommtschaden(enemysold.getSchaden() + rand.nextInt(5));
-			}
-			if (!enemyfights && ownsoldierfights) {
-				allunits.get(BASEENEINARRAY).bekommtschaden(ownsold.getSchaden() + rand.nextInt(5));
+				Einheit ownsold = null;
+				int i = 0, ownindex = 0;
+				while (ownsold == null && i < allunits.size()) {
+					if (!allunits.get(i).isEnemy())
+						ownsold = allunits.get(i);
+						ownindex = i;
+					i++;
+				}
+				Einheit enemysold = null;
+				i = 0; int enemyindex = 0;
+				while (enemysold == null && i < allunits.size()) {
+					if (allunits.get(i).isEnemy())
+						enemysold = allunits.get(i);
+						enemyindex = i;
+					i++;
+				}
+				if (enemyfights && ownsoldierfights) {
+					
+					allunits.get(ownindex).bekommtschaden
+					(enemysold.getSchaden() + rand.nextInt(5));
+					allunits.get(enemyindex).bekommtschaden
+					(ownsold.getSchaden() + rand.nextInt(5));
+				}
+				if (enemyfights && !ownsoldierfights) {
+					baseown.bekommtschaden(enemysold.getSchaden() + rand.nextInt(5));
+//					Log.w("Basisown", "Eigene Basis bekommt Schaden");
+				}
+				if (!enemyfights && ownsoldierfights) {
+					baseenemy.bekommtschaden(ownsold.getSchaden() + rand.nextInt(5));
+//					Log.w("Basisene", "Gegnerbasis wird geschaedigt");
+				}
 			}
 		}
 	};
@@ -539,19 +548,21 @@ private void testhitboxfeind(Einheit feindeinheit, Einheit eigeneEin) {
 	if (feindeinheit != null) {
 		if (feindeinheit.isamlaufen()) {
 			int feindindex = allunits.indexOf(feindeinheit);
-			if(eigeneEin == null) //wenn nur eine gegnerische  Einheit gespawnt ist
+			boolean nurgegner = true;
+			for (Einheit e : allunits)
+			{if (!e.isEnemy()) nurgegner = false;}
+			if(nurgegner) //wenn nur eine gegnerische  Einheit gespawnt ist
 			{
-				
 				if(allunits.get(feindindex).getXx()<=60) //HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
 				{
 					Log.d("Kampf","GegnerEinheit läuft gegen die basis"); 
-					allunits.get(feindindex).setKaempfen(true);
+					allunits.get(feindindex).setamlaufen(false);
 					hitboxtestg=false;//hört auf weiter zu checken
 					allunits.get(feindindex).setKaempfen(true); //gibt zurueck, dass die hitbox mit etwas kollidiert
 					timerstartboolg=false;
 				}
 			} 
-			else if (eigeneEin.isamlaufen()){
+			else {
 		//		Log.d("Hitboxen","Hitboxen Gegern werden aufgerufen");
 				int xeigen = eigeneEin.getXx();
 				
@@ -568,11 +579,7 @@ private void testhitboxfeind(Einheit feindeinheit, Einheit eigeneEin) {
 
 }
 
-private void kaempfen(Einheit aneinheit) {
-	int index = allunits.indexOf(aneinheit);
-	// TODO
-	
-}
+
 
 //Diese Funktion ueberprueft, ob eine Einheit keine hp hat. Bei keinen hp kann sie die bisher
 //	bestehende Funktion gegner toeten aufrufen.
@@ -755,6 +762,10 @@ public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
         				schaden = 5;
         				hp = 100;
         			}
+        			if (einheitart == ARTBASE) {
+        				schaden = 0;
+        				hp = 1000;
+        			}
         	}
         	
         	
@@ -766,7 +777,6 @@ public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
 
 			public void setamlaufen(boolean einheitistamlaufen) {
 				this.laeuft = einheitistamlaufen;
-				Log.w("test", "und geht");
 			}
 			
 			public boolean isamlaufen() {

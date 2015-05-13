@@ -192,8 +192,21 @@ boolean running=true;
 	    return stickman_walking_animation_gegner;
 	}
 	  
-	
+	private void animationlaufzukampf(int index) {
+		einheitbilder.get(index).setVisibility(View.GONE); //hier entferne ich die alte animation
+		einheitbilder.get(index).setImageDrawable(null); 
+		
+		einheitbilder.set(index, new ImageView(GameActivity.this)); // und erstelle hier die Kampfanimation
+		einheitbilder.get(index).setImageResource(R.drawable.anim_stickman_kampf);
+	}
 
+	private void animationlaufzukampfg (int index) {
+		einheitbilder.get(index).setVisibility(View.GONE);
+		einheitbilder.get(index).setImageDrawable(null);
+		
+		einheitbilder.set(index, new ImageView(GameActivity.this));
+		einheitbilder.get(index).setImageResource(R.drawable.anim_stickman_kampf_g);
+	}
 	
 /*	protected void onResume(){ //passiert nach onStart() braucht ihr gerade eigentlich nicht beachten
 		super.onResume();
@@ -364,12 +377,10 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 					i++;
 				}
 				int index = allunits.indexOf(einheita);
-				einheitbilder.get(index).setVisibility(View.GONE); //hier entferne ich die alte animation
-				einheitbilder.get(index).setImageDrawable(null); 
+				
+				animationlaufzukampf(index);
 				
 				
-				einheitbilder.set(index, new ImageView(GameActivity.this)); // und erstelle hier die Kampfanimation
-				einheitbilder.get(index).setImageResource(R.drawable.anim_stickman_kampf);
 				@SuppressWarnings("deprecation")
 				AbsoluteLayout al = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame);
 				int x = 0;
@@ -391,7 +402,7 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 						x,
 						+s_walk_animation.getTop()); //in welcher Hoehe neu ein ImageView gespawnt wird
 						
-				al.addView(einheitbilder.get(index), lp2);  
+				al.addView(einheitbilder.get(index), lp2);
 				
 				}
 			});
@@ -432,12 +443,8 @@ TimerTask timetaskg = new TimerTask() { //falls hitboxenerkennung  kampfanimatio
 								i++;
 							}
 							myindex = allunits.indexOf(feindeinheita);
-							s_walk_animation_g.setVisibility(View.GONE);
-							s_walk_animation_g.setImageDrawable(null);
 							
-							
-							kampf_animation_g = new ImageView(GameActivity.this);
-							kampf_animation_g.setImageResource(R.drawable.anim_stickman_kampf_g);
+							animationlaufzukampfg(myindex);
 							@SuppressWarnings("deprecation")
 							AbsoluteLayout al = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame);
 			
@@ -451,7 +458,7 @@ TimerTask timetaskg = new TimerTask() { //falls hitboxenerkennung  kampfanimatio
 							x,
 							s_walk_animation_g.getTop());
 									
-							al.addView(kampf_animation_g, lp2);  
+							al.addView(einheitbilder.get(myindex), lp2);  
 							
 						}
 					});

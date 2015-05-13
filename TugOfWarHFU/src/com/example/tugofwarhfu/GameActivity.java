@@ -32,6 +32,7 @@ public class GameActivity extends Activity {
 	ArrayList<Einheit> allunits;
 	ArrayList<ImageView> einheitbilder;
 	int endofarray = 0;
+	boolean soldatbuttonactive = true;
 	
 	ImageView s_fight_animation;
 	ImageView s_walk_animation;
@@ -262,8 +263,13 @@ public void SpawnSoldat(View Buttonsoldat) //onClick Funktion, spawn Soldaten
 	
 	Log.d("Soldat", "Soldat wird gespawnt!");
 	
-	if(aktuellesguthaben>=20)
-		 {
+	if((aktuellesguthaben>=20) && soldatbuttonactive)
+		 {	
+			ImageButton thisimagebutton = (ImageButton) findViewById(R.id.imageButtonSoldat);
+			thisimagebutton.setClickable(false);
+			soldatbuttonactive = false;  //3 sec nicht wieder aktivierbar
+			int cooldowntime = 3000 ;
+			new Cooldown(cooldowntime, ARTSOLDAT);
 			aktuellesguthaben=aktuellesguthaben-20;	//zaehler ist der Goldwert, der Soldat kostet gerade 20 Gold
 			einheitbilder.add(endofarray, eigenersoldatpic());
 			Einheit eigeneeinheit = new Einheit(false, ARTSOLDAT);
@@ -344,7 +350,6 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 				}
 				else { // wenn keine eigene Einheit da ist
 					kampftest = false;
-					
 					
 				}
 			}
@@ -466,7 +471,13 @@ TimerTask timetaskg = new TimerTask() { //falls hitboxenerkennung  kampfanimatio
 				}
 						
 			}
+		obEinheittotist(); // Aufruf aus einem wiederholten Timertask
+		if (soldatbuttonactive) { //aktiviert den Button nach dem Cooldown wieder, Aufruf aus einem wiederholten Timertask
+			ImageButton thisimagebutton = (ImageButton) findViewById(R.id.imageButtonSoldat);
+			thisimagebutton.setClickable(true);
 		}
+		}
+		
 	};
 	Timer tg = new Timer();
 	tg.schedule(timetaskg, 0, 100); 
@@ -511,6 +522,17 @@ private void kaempfen(Einheit aneinheit) {
 	
 }
 
+//Diese Funktion ueberprueft, ob eine Einheit keine hp hat. Bei keinen hp kann sie die bisher
+//	bestehende Funktion gegner toeten aufrufen.
+private void obEinheittotist() {
+	for (Einheit eine : allunits) {
+		if ( eine.getHp() < 1) {
+			if ( eine.isEnemy() ) {
+				toetegegner_und_weiterlaufen();
+			}
+		}
+	}
+}
 
 public void spielVerlieren(View v){ //muss nachher in eine If bedingung in einen Timer rein, die z.B. alles halbe sekunde checkt, ob eine Base zerstört ist
 	
@@ -663,8 +685,11 @@ public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
         	public int xx;
         	
         	private boolean laeuft = false;
+        	private int hp;
+        	private int schaden = 0;
+        	
 
-        	private char einheitart;
+			private char einheitart;
         	private boolean enemy;
         	private boolean kaempft = false;
 
@@ -674,8 +699,14 @@ public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
         			if (isenemy) xx = 900;
         			enemy = isenemy;
         			einheitart = kategorie;
+        			if (einheitart == ARTSOLDAT) {
+        				schaden = 5;
+        				hp = 100;
+        			}
         	}
-
+        	
+        	
+        	
 			public void startwalktimer() {
 				new Timer().scheduleAtFixedRate(new TimerAddX(), 0, DELAYTOSPEED);
 			}
@@ -706,6 +737,18 @@ public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
 				return enemy;
 			}
 
+			public int getHp() {
+				return hp;
+			}
+			
+			public int getSchaden() {
+				return schaden;
+			}
+			
+			public void bekommtschaden(int angerichteterschaden){
+				hp -= angerichteterschaden;
+			}
+
 			class TimerAddX extends TimerTask { // gibt den X wert des eigenen Stickmans an
             	
             	
@@ -719,8 +762,28 @@ public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
             	}
 
         }
-
-
+        
+        private class Cooldown {
+        Timer ticktock;
+        int buttontyp;
+        public Cooldown (int millisecondstocooldown, int buttonart) {
+    		int end = millisecondstocooldown;
+    		buttontyp = buttonart;
+    		TimerTask activateagain = new TimerTask() {
+    			
+    			@Override
+    			public void run() {
+    				if (buttontyp == ARTSOLDAT) {
+    					soldatbuttonactive = true;
+    				}
+    					
+    			}
+    		};
+    		ticktock = new Timer();
+    		ticktock.schedule(activateagain, end);
+    	}
+        
+        }
 }
 
 	

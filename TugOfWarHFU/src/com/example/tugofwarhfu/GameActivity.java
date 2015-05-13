@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.lang.Thread;
+import java.lang.Character.UnicodeBlock;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -34,6 +35,7 @@ public class GameActivity extends Activity {
 	int endofarray = 0;
 	
 	ImageView s_fight_animation;
+	ImageView s_walk_animation;
 	ImageView s_walk_animation_g;
 	ImageView kampf_animation;
 	ImageView kampf_animation_g;
@@ -143,7 +145,7 @@ boolean running=true;
 	
 	private boolean kampftest = false;
     
-	ImageView s_walk_animation;
+
 	
 	
 	private ImageView eigenersoldatpic() {
@@ -174,7 +176,7 @@ boolean running=true;
 		return gegnerspawn;
 	}
 
-	private void gebelaufanimationg(ImageView feindsold) {
+	private void gebelaufanimg(ImageView feindsold) {
 		s_walk_animation_g = feindsold;
 		s_walk_animation_g.setVisibility(View.VISIBLE);
 		s_walk_animation_g.startAnimation(stickman_walk_Animation_gegner());
@@ -343,7 +345,7 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 	thitb.schedule(hitboxtask,0,100); 
 	
 	
-	TimerTask timetask = new TimerTask() { //falls hitboxenerkennung dann kampfanimation
+	TimerTask timetask = new TimerTask() { //falls hitboxenerkennung dann kampfanimation von eigenen Einheiten
 		
 		public void run() { //hier wird die Kampfanimation abgespielt
 			if(soebenKollision==true && kampfanimtest ==false)
@@ -353,22 +355,33 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 					@Override
 					public void run(){
 				
+				Einheit einheita = null;
+				int i = 0;
+				while (einheita == null && i < allunits.size()) {
+					if (allunits.get(i).isEnemy() == false)
+						einheita = allunits.get(i);
+
+					i++;
+				}
+				int index = allunits.indexOf(einheita);
+				einheitbilder.get(index).setVisibility(View.GONE); //hier entferne ich die alte animation
+				einheitbilder.get(index).setImageDrawable(null); 
 				
-				s_walk_animation.setVisibility(View.GONE); //hier entferne ich die alte animation
-				s_walk_animation.setImageDrawable(null); 
 				
-				
-				kampf_animation = new ImageView(GameActivity.this); // und erstelle hier die Kampfanimation
-				kampf_animation.setImageResource(R.drawable.anim_stickman_kampf);
+				einheitbilder.set(index, new ImageView(GameActivity.this)); // und erstelle hier die Kampfanimation
+				einheitbilder.get(index).setImageResource(R.drawable.anim_stickman_kampf);
 				@SuppressWarnings("deprecation")
 				AbsoluteLayout al = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame);
 				int x = 0;
-				boolean warschonerste = true;
-				for (Einheit eineEinheit : allunits) {
-					if (!eineEinheit.isEnemy() && warschonerste)
-						{ x = eineEinheit.getXx();
-						warschonerste = false;
-						}
+				Einheit eineeigeneEinhe = null;
+				i = 0;
+				while (eineeigeneEinhe == null && i < allunits.size()) {
+					if (!allunits.get(i).isEnemy()) {
+						eineeigeneEinhe = allunits.get(i);
+						x = eineeigeneEinhe.getXx();
+					}
+
+					i++;
 				}// hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
 				
 				@SuppressWarnings("deprecation")
@@ -378,7 +391,7 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 						x,
 						+s_walk_animation.getTop()); //in welcher Hoehe neu ein ImageView gespawnt wird
 						
-				al.addView(kampf_animation, lp2);  
+				al.addView(einheitbilder.get(index), lp2);  
 				
 				}
 			});
@@ -584,7 +597,7 @@ public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
 	AbsoluteLayout grl = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame);
 	AbsoluteLayout.LayoutParams glp = new AbsoluteLayout.LayoutParams(350, 350,900,300);
 	grl.addView(einheitbilder.get(meinindex), glp);
-	gebelaufanimationg(einheitbilder.get(meinindex));
+	gebelaufanimg(einheitbilder.get(meinindex));
 	
 	
 	allunits.add(new Einheit(true, ARTSOLDAT));

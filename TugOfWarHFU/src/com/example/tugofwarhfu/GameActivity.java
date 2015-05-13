@@ -2,6 +2,7 @@ package com.example.tugofwarhfu;
 
 
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.lang.Thread;
@@ -24,14 +25,17 @@ import android.view.animation.TranslateAnimation;
 public class GameActivity extends Activity {
 
 	// Konstanten Minh
+	private final char ARTBASE = 0;
 	private final char ARTSOLDAT = 1;
 	private final int ABSTANDZWEISOLDATEN = 130;
 	private final int GRENZEFEINDLICHEBASIS = 820;
+	private final int BASEOWNINARRAY = 0;
+	private final int BASEENEINARRAY = 1;
 	
 	// Variablen Minh
 	ArrayList<Einheit> allunits;
 	ArrayList<ImageView> einheitbilder;
-	int endofarray = 0;
+	int endofarray = 2;
 	boolean soldatbuttonactive = true;
 	
 	ImageView s_fight_animation;
@@ -332,6 +336,7 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 							{
 								Log.d("Kampf","Es wird gekämpft");
 								soebenKollision = true; //gibt zurueck, dass die hitbox mit etwas kollidiert
+								allunits.get(allunits.indexOf(aneinheit)).setKaempfen(true);
 								aneinheit.setamlaufen(false);
 								kaempfen(aneinheit);
 							}
@@ -345,6 +350,7 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 							Log.d("Kampf","Einheit läuft gegen die basis");
 							soebenKollision = true; //gibt zurueck, dass die hitbox mit etwas kollidiert
 							aneinheit.setamlaufen(false);
+							allunits.get(allunits.indexOf(aneinheit)).setKaempfen(true);
 						}
 					}
 				}
@@ -481,6 +487,52 @@ TimerTask timetaskg = new TimerTask() { //falls hitboxenerkennung  kampfanimatio
 	};
 	Timer tg = new Timer();
 	tg.schedule(timetaskg, 0, 100); 
+	
+	TimerTask schaden = new TimerTask() {
+		
+		@Override
+		public void run() {
+			Random rand = new Random();
+			boolean enemyfights = false , ownsoldierfights = false;
+			for (Einheit eine : allunits) {
+				if (eine.isKaempfen()) {
+					if (eine.isEnemy()) enemyfights = true;
+					else ownsoldierfights = true;
+				}
+			}
+			Einheit ownsold = null;
+			int i = 0, ownindex = 0;
+			while (ownsold == null && i < allunits.size()) {
+				if (!allunits.get(i).isEnemy())
+					ownsold = allunits.get(i);
+					ownindex = i;
+				i++;
+			}
+			Einheit enemysold = null;
+			i = 0; int enemyindex = 0;
+			while (enemysold == null && i < allunits.size()) {
+				if (!allunits.get(i).isEnemy())
+					enemysold = allunits.get(i);
+					enemyindex = i;
+				i++;
+			}
+			if (enemyfights && ownsoldierfights) {
+				
+				allunits.get(ownindex).bekommtschaden
+				(enemysold.getSchaden() + rand.nextInt(5));
+				allunits.get(enemyindex).bekommtschaden
+				(ownsold.getSchaden() + rand.nextInt(5));
+			}
+			if (enemyfights && !ownsoldierfights) {
+				allunits.get(BASEOWNINARRAY).bekommtschaden(enemysold.getSchaden() + rand.nextInt(5));
+			}
+			if (!enemyfights && ownsoldierfights) {
+				allunits.get(BASEENEINARRAY).bekommtschaden(ownsold.getSchaden() + rand.nextInt(5));
+			}
+		}
+	};
+	Timer schadenuhr = new Timer();
+	schadenuhr.schedule(schaden, 0 , 900);
 }
 
 private void testhitboxfeind(Einheit feindeinheit, Einheit eigeneEin) {

@@ -20,10 +20,7 @@ public class AnleitungActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
 	    setContentView(R.layout.activity_anleitung);
-	
-	    // TODO Auto-generated method stub
-	    
-	
+
 
 //TextView tv = (TextView) findViewById(R.id.txt_anleitung);
 //tv.setMovementMethod(new ScrollingMovementMethod());

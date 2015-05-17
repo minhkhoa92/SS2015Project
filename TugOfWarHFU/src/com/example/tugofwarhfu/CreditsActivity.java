@@ -2,7 +2,6 @@ package com.example.tugofwarhfu;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.view.View;
 
 public class CreditsActivity extends Activity {
 

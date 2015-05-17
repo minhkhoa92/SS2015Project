@@ -15,6 +15,7 @@ import android.widget.AbsoluteLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
 import android.view.animation.LinearInterpolator;
@@ -25,6 +26,7 @@ public class GameActivity extends Activity {
 
 	// Konstanten Minh
 	private final char ARTSOLDAT = 1;
+	private final char ARTBASE = 0;
 	private final int ABSTANDZWEISOLDATEN = 130;
 	private final int GRENZEFEINDLICHEBASIS = 820;
 	
@@ -33,6 +35,10 @@ public class GameActivity extends Activity {
 	ArrayList<ImageView> einheitbilder;
 	int endofarray = 0;
 	boolean soldatbuttonactive = true;
+	Einheit baseown;
+	Einheit baseene;
+	private int stringpos = 0;
+	AbsoluteLayout rl;
 	
 	ImageView s_fight_animation;
 	ImageView s_walk_animation;
@@ -40,17 +46,6 @@ public class GameActivity extends Activity {
 	ImageView kampf_animation;
 	ImageView kampf_animation_g;
 	
-	public boolean timerstartboolg = false;
-
-	private boolean kampftestg = false;
-	private boolean hitboxtestg = true;
-	private boolean soebenKollision = false;
-	private boolean threadzrueckg = false;
-	private boolean kampfanimtest = false;
-	private boolean kampfanimtestg = false;
-	private boolean kampftest = false;
-	
-
 	//Variablen von ALex
 	
 
@@ -69,6 +64,14 @@ boolean running=true;
 	public void onCreate(Bundle savedInstanceState) { // passiert wenn die Activity erstellt wird
 	    super.onCreate(savedInstanceState);
 	    setContentView(R.layout.activity_game); 
+	    try {
+	    	rl = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame);
+	    } catch (Exception e) {
+	    	e.printStackTrace();
+	    }
+	    finally {
+	    	
+	    }
 	   final ImageView animImageView_walk = (ImageView) findViewById(R.id.stickman_walk); // erstellung des ImageView des eigenen Stickmans
 	    animImageView_walk.setBackgroundResource(R.drawable.anim_stickman_walking);
 		    animImageView_walk.post(new Runnable() {
@@ -89,7 +92,6 @@ boolean running=true;
 			            AnimationDrawable frameAnimation =
 			                (AnimationDrawable) animImageView_walk_g.getBackground();
 			            frameAnimation.start();
-			       
 			        }
 			    }); 
 			    
@@ -108,30 +110,25 @@ boolean running=true;
 							
 							@Override
 							public void run(){
-								
-									gold_handler.post(new Runnable(){
-										@Override
-										public void run(){
-											aktuellesguthaben=aktuellesguthaben+1;
-											goldstand.setText(String.valueOf("Gold "+aktuellesguthaben));
-											
-											
-										}
-									});
-								
+								gold_handler.post(new Runnable(){
+									@Override
+									public void run(){
+										aktuellesguthaben=aktuellesguthaben+1;
+//										goldstand.setText(String.valueOf("Gold "+aktuellesguthaben));
+									}
+								});
 							}
-							
 						};
 						new Thread(runnable).start();
-						
 					}
 				};
 				Timer time = new Timer();
 				time.schedule(timetask, 1000, 1000); 
 				
 				//Goldschleife von Alex Ende
-			    
-			    
+				
+
+				testhitundkampf();
 	    }
 	 
 	
@@ -140,11 +137,20 @@ boolean running=true;
 		Log.d("Start","Act.Start");
 		allunits = new ArrayList<GameActivity.Einheit>();
 		einheitbilder = new ArrayList<ImageView>();
-		testhitundkampf();
+		baseown = new Einheit(false, ARTBASE);
+		baseene = new Einheit(true, ARTBASE);
 	}
 	
 	
 	
+	@Override
+	protected void onPause() {
+		super.onPause();
+		//finish(); // keine Ahnung ob das den hoeheren Anforderungen entspricht 
+		//finish() sorgt fuer keine Ueberbleibsel wenn die GameActivity von anderen Activities ueberlagert wird
+	}
+
+
 	private ImageView eigenersoldatpic() {
 		ImageView neuerSoldat = new ImageView(GameActivity.this);  // erstellung eines neuen ImageViews für jeden Knopfdruck
 		neuerSoldat.setImageResource(R.drawable.anim_stickman_walking);
@@ -188,7 +194,95 @@ boolean running=true;
 	    stickman_walking_animation_gegner.setFillAfter(false); 
 	    return stickman_walking_animation_gegner;
 	}
-	  
+	 
+	private void startkaempfen() {
+		runOnUiThread(new Runnable() { //über runOnUiThread() kann man auf die Imageviews aus dem Mainthread zu greifen
+			@Override
+			public void run(){
+	
+			Einheit einheita = null;
+			int i = 0;
+			while (einheita == null && i < allunits.size()) {
+				if (allunits.get(i).isEnemy() == false)
+					einheita = allunits.get(i);
+
+				i++;
+			}
+			int index = allunits.indexOf(einheita);
+	
+			animationlaufzukampf(index);
+	
+	
+			@SuppressWarnings("deprecation")
+			int x = 0;
+			Einheit eineeigeneEinhe = null;
+			i = 0;
+			while (eineeigeneEinhe == null && i < allunits.size()) {
+				if (!allunits.get(i).isEnemy()) {
+					eineeigeneEinhe = allunits.get(i);
+					x = eineeigeneEinhe.getXx();
+				}
+
+				i++;
+			}// hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
+	
+			@SuppressWarnings("deprecation")
+			AbsoluteLayout.LayoutParams lp2 = new AbsoluteLayout.LayoutParams(
+					s_walk_animation.getHeight(), 
+					+s_walk_animation.getWidth(),
+					x,
+					+s_walk_animation.getTop()); //in welcher Hoehe neu ein ImageView gespawnt wird
+			
+			rl.addView(einheitbilder.get(index), lp2);
+	
+			}
+		});
+	}
+	
+	private void startkaempfeng() {
+		Log.d("Kampf","Es wird gekämpft");
+		Einheit feindeinheita = null;
+		int i = 0;
+		while (feindeinheita == null && i < allunits.size()) {
+			if (allunits.get(i).isEnemy())
+				feindeinheita = allunits.get(i);
+
+				i++;
+		}
+		if (feindeinheita != null) {
+			final int myindexg = allunits.indexOf(feindeinheita);
+			{	
+				runOnUiThread(new Runnable() {
+					
+					@Override
+					public void run() {
+						Einheit feindeinheita = null;
+						int i = 0;
+						while (feindeinheita == null && i < allunits.size()) {
+							if (allunits.get(i).isEnemy())
+								feindeinheita = allunits.get(i);
+							i++;
+						}
+						
+						animationlaufzukampfg(myindexg);
+						@SuppressWarnings("deprecation")
+						
+						int x = allunits.get(myindexg).getXx(); // hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
+		
+						@SuppressWarnings("deprecation")
+						AbsoluteLayout.LayoutParams lp2 = new AbsoluteLayout.LayoutParams(
+						s_walk_animation_g.getHeight(), 
+						s_walk_animation_g.getWidth(),
+						x,
+						s_walk_animation_g.getTop());
+								
+						rl.addView(einheitbilder.get(myindexg), lp2);  
+					}
+				});
+			}
+		}
+	}
+	
 	private void animationlaufzukampf(int index) {
 		einheitbilder.get(index).setVisibility(View.GONE); //hier entferne ich die alte animation
 		einheitbilder.get(index).setImageDrawable(null); 
@@ -257,47 +351,67 @@ boolean running=true;
 		         
 	} */
         
-@SuppressWarnings("deprecation")
 public void SpawnSoldat(View Buttonsoldat) //onClick Funktion, spawn Soldaten
 {
 	
 	Log.d("Soldat", "Soldat wird gespawnt!");
 	
 	if((aktuellesguthaben>=20) && soldatbuttonactive)
-		 {	
-			ImageButton thisimagebutton = (ImageButton) findViewById(R.id.imageButtonSoldat);
-			thisimagebutton.setClickable(false);
-			soldatbuttonactive = false;  //3 sec nicht wieder aktivierbar
-			int cooldowntime = 3000 ;
-			new Cooldown(cooldowntime, ARTSOLDAT);
-			aktuellesguthaben=aktuellesguthaben-20;	//zaehler ist der Goldwert, der Soldat kostet gerade 20 Gold
-			einheitbilder.add(endofarray, eigenersoldatpic());
-			Einheit eigeneeinheit = new Einheit(false, ARTSOLDAT);
-			int meinindex = endofarray;
-			allunits.add(meinindex, eigeneeinheit);
-			eigenersoldatpic();
-		
-			AbsoluteLayout rl = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame); //Position des ImageViews
-			AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(350, 350,0,300);
-			rl.addView(einheitbilder.get(meinindex), lp); 
-			gebelaufanim(einheitbilder.get(meinindex));
-			
-			
-			allunits.get(meinindex).setamlaufen(true); //Bedinung damit der Zähler zählt
-			
-			//Startet den Zähler für die X Berechnung
-			allunits.get(meinindex).startwalktimer();
-			// dieser Block berechnet die X Koordinate unseres Stickmans
-			//teilt mit, dass die Einheit bereit zum kämpfen ist
-			endofarray++;
+	{	
+		soldatbuttonactive = false;  //3 sec nicht wieder aktivierbar
+		int cooldowntime = 3000 ;
+		new Cooldown(cooldowntime, ARTSOLDAT);
+		aktuellesguthaben=aktuellesguthaben-20;	//zaehler ist der Goldwert, der Soldat kostet gerade 20 Gold
+		erstelleSoldat(false);
 	}
 }
+
+@SuppressWarnings("deprecation")
+private void erstelleSoldat(boolean isenemy) {
+	int meinindex = endofarray;
+	ImageButton thisimagebutton = (ImageButton) findViewById(R.id.imageButtonSoldat);
+	thisimagebutton.setClickable(false);
+	if (!isenemy){
+		einheitbilder.add(endofarray, eigenersoldatpic());
+	}
+	else 
+	{einheitbilder.add(endofarray, feindsoldatpic());}
+	
+	Einheit neueeinheit = new Einheit(isenemy, ARTSOLDAT);
+	
+	allunits.add(meinindex, neueeinheit);
+
+	AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(350, 350,0,300);
+	rl.addView(einheitbilder.get(meinindex), lp); 
+	if (!isenemy)
+	{gebelaufanim(einheitbilder.get(meinindex));}
+	else
+	{gebelaufanimg(einheitbilder.get(meinindex));}
+	
+	allunits.get(meinindex).setamlaufen(true); //Bedinung damit der Zähler zählt
+	
+	//Startet den Zähler für die X Berechnung
+	allunits.get(meinindex).startwalktimer();
+	// dieser Block berechnet die X Koordinate unseres Stickmans
+	//teilt mit, dass die Einheit bereit zum kämpfen ist
+	endofarray++;
+}
+
 
 private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstart
 	TimerTask hitboxtask = new TimerTask() { //hitboxerkennung
 		
 		@Override
 		public void run() {
+			stringpos++;
+//			if (stringpos > 199 && stringpos < 201 && (stringpos%10 < 1) )  
+//			{/*erstelleSoldat(true);*/ new Handler().post(new Runnable() {
+//				
+//				@Override
+//				public void run() {
+//					Toast.makeText(GameActivity.this, "minh in schleife", Toast.LENGTH_LONG).show();
+//				}
+//			});}
 			if (!allunits.isEmpty()) { //wenn keine Einheit da ist
 				Einheit aneinheit = null;
 				int i = 0;
@@ -322,35 +436,48 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 				
 				testhitboxfeind(feindeinheit, aneinheit);
 				if(aneinheit != null) { //eigene Einheit da, die kaempft oder wartet
-					kampftest = true;
-					
-					if (kampftestg == true) //wenn eine eigene Einheit und eine Gegner Einheit gespawnt sind
+				
+					// nachfrage = 1 nur eine eigene Einheit
+					// nachfrage = 2 Einheit von beiden da
+					// nachfrage = 3 nur eine feindliche Einheit
+					if (nachfrage() == 2) //wenn eine eigene Einheit und eine Gegner Einheit gespawnt sind
 					{
 	//					Log.d("Hitboxen","Hitboxen werden aufgerufen");
 						if ( feindeinheit != null ) {
 							if(aneinheit.getXx() >= (feindeinheit.getXx() - ABSTANDZWEISOLDATEN)) // HITBOXEN! Einheit-X-Wert und Gegner-X-Wert
 							{
 								Log.d("Kampf","Es wird gekämpft");
-								soebenKollision = true; //gibt zurueck, dass die hitbox mit etwas kollidiert
+								aneinheit.setKaempfen(true); //gibt zurueck, dass die hitbox mit etwas kollidiert
 								aneinheit.setamlaufen(false);
-								kaempfen(aneinheit);
+								try {
+									startkaempfen();
+								}
+								catch (Exception e) {
+									e.printStackTrace();
+								} finally {
+									
+								}
 							}
 						}
 					
 					}
-					else if(kampftestg != true) //wenn nur eine eigene Einheit gespawnt ist
+					else if(nachfrage() == 1) //wenn nur eine eigene Einheit gespawnt ist
 					{
 						if(aneinheit.getXx() >= GRENZEFEINDLICHEBASIS) //HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
 						{
 							Log.d("Kampf","Einheit läuft gegen die basis");
-							soebenKollision = true; //gibt zurueck, dass die hitbox mit etwas kollidiert
+							aneinheit.setKaempfen(true); //gibt zurueck, dass die hitbox mit etwas kollidiert
 							aneinheit.setamlaufen(false);
+							try {
+								startkaempfen();
+							}
+							catch (Exception e) {
+								e.printStackTrace();
+							} finally {
+								
+							}
 						}
 					}
-				}
-				else { // wenn keine eigene Einheit da ist
-					kampftest = false;
-					
 				}
 			}
 			
@@ -360,117 +487,118 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 		
 	};
 	Timer thitb = new Timer();
-	thitb.schedule(hitboxtask,0,100); 
+	thitb.schedule(hitboxtask, 0, 300); 
 	
 	
-	TimerTask timetask = new TimerTask() { //falls hitboxenerkennung dann kampfanimation von eigenen Einheiten
-		
-		public void run() { //hier wird die Kampfanimation abgespielt
-			if(soebenKollision ==true && kampfanimtest ==false)
-			{
-				
-				runOnUiThread(new Runnable() { //über runOnUiThread() kann man auf die Imageviews aus dem Mainthread zu greifen
-					@Override
-					public void run(){
-				
-				Einheit einheita = null;
-				int i = 0;
-				while (einheita == null && i < allunits.size()) {
-					if (allunits.get(i).isEnemy() == false)
-						einheita = allunits.get(i);
-
-					i++;
-				}
-				int index = allunits.indexOf(einheita);
-				
-				animationlaufzukampf(index);
-				
-				
-				@SuppressWarnings("deprecation")
-				AbsoluteLayout al = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame);
-				int x = 0;
-				Einheit eineeigeneEinhe = null;
-				i = 0;
-				while (eineeigeneEinhe == null && i < allunits.size()) {
-					if (!allunits.get(i).isEnemy()) {
-						eineeigeneEinhe = allunits.get(i);
-						x = eineeigeneEinhe.getXx();
-					}
-
-					i++;
-				}// hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
-				
-				@SuppressWarnings("deprecation")
-				AbsoluteLayout.LayoutParams lp2 = new AbsoluteLayout.LayoutParams(
-						s_walk_animation.getHeight(), 
-						+s_walk_animation.getWidth(),
-						x,
-						+s_walk_animation.getTop()); //in welcher Hoehe neu ein ImageView gespawnt wird
-						
-				al.addView(einheitbilder.get(index), lp2);
-				
-				}
-			});
-			soebenKollision = false;
-			kampfanimtest=true; //hier wird mitgeteilt, dass die Einheit aktuell kämpft ( wenn also die Einheit nachher einen Gegner tötet, wird diese Variable wieder false
-			}		
-		
-		};
-	};
-	Timer t1 = new Timer();
-	t1.schedule(timetask, 0, 100); //es wird alle zehntel sekunde gecheckt, ob die hitbox etwas getroffen hat
+//	TimerTask timetask = new TimerTask() { //falls hitboxenerkennung dann kampfanimation von eigenen Einheiten
+//		
+//		public void run() { //hier wird die Kampfanimation abgespielt
+//			if(soebenKollision ==true && kampfanimtest ==false)
+//			{
+//				
+//				runOnUiThread(new Runnable() { //über runOnUiThread() kann man auf die Imageviews aus dem Mainthread zu greifen
+//						@Override
+//						public void run(){
+//				
+//						Einheit einheita = null;
+//						int i = 0;
+//						while (einheita == null && i < allunits.size()) {
+//							if (allunits.get(i).isEnemy() == false)
+//								einheita = allunits.get(i);
+//
+//							i++;
+//						}
+//						int index = allunits.indexOf(einheita);
+//				
+//						animationlaufzukampf(index);
+//				
+//				
+//						@SuppressWarnings("deprecation")
+//						AbsoluteLayout al = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame);
+//						int x = 0;
+//						Einheit eineeigeneEinhe = null;
+//						i = 0;
+//						while (eineeigeneEinhe == null && i < allunits.size()) {
+//							if (!allunits.get(i).isEnemy()) {
+//								eineeigeneEinhe = allunits.get(i);
+//								x = eineeigeneEinhe.getXx();
+//							}
+//
+//							i++;
+//						}// hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
+//				
+//						@SuppressWarnings("deprecation")
+//						AbsoluteLayout.LayoutParams lp2 = new AbsoluteLayout.LayoutParams(
+//								s_walk_animation.getHeight(), 
+//								+s_walk_animation.getWidth(),
+//								x,
+//								+s_walk_animation.getTop()); //in welcher Hoehe neu ein ImageView gespawnt wird
+//						
+//						al.addView(einheitbilder.get(index), lp2);
+//				
+//						}
+//				});
+//				kampfanimtest=true; //hier wird mitgeteilt, dass die Einheit aktuell kämpft ( wenn also die Einheit nachher einen Gegner tötet, wird diese Variable wieder false
+//			}
+//		};
+//	};
+//	Timer t1 = new Timer();
+//	t1.schedule(timetask, 0, 100); //es wird alle zehntel sekunde gecheckt, ob die hitbox etwas getroffen hat
 
 TimerTask timetaskg = new TimerTask() { //falls hitboxenerkennung  kampfanimation
 		
-		public void run() { //hier soll die Kampfanimation abgespielt werden			 
+		public void run() { //hier soll die Kampfanimation fuer Gegner abgespielt werden			 
+//			 Minh Notiz: Eingefuegte weitere Aktionen : 
+//			 Aktivieren von Button nach Cooldownende
+//			 testen ob tote Einheiten in der allunits ArrayList liegen *Minh Notiz Ende
 			
-			Einheit feindeinheita = null;
-			int i = 0;
-			while (feindeinheita == null && i < allunits.size()) {
-				if (allunits.get(i).isEnemy())
-					feindeinheita = allunits.get(i);
-
-				i++;
-			}
-			if (feindeinheita != null) {
-				int myindexg = allunits.indexOf(feindeinheita);
-				if(allunits.get(myindexg).isKaempfen()==true && kampfanimtestg ==false)
-				{	
-					runOnUiThread(new Runnable() {
-						
-						@Override
-						public void run() {
-							Einheit feindeinheita = null;
-							int i = 0, myindex;
-							while (feindeinheita == null && i < allunits.size()) {
-								if (allunits.get(i).isEnemy())
-									feindeinheita = allunits.get(i);
-								i++;
-							}
-							myindex = allunits.indexOf(feindeinheita);
-							
-							animationlaufzukampfg(myindex);
-							@SuppressWarnings("deprecation")
-							AbsoluteLayout al = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame);
-			
-							int x = allunits.get(myindex).getXx(); // hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
-			
-							
-							@SuppressWarnings("deprecation")
-							AbsoluteLayout.LayoutParams lp2 = new AbsoluteLayout.LayoutParams(
-							s_walk_animation_g.getHeight(), 
-							s_walk_animation_g.getWidth(),
-							x,
-							s_walk_animation_g.getTop());
-									
-							al.addView(einheitbilder.get(myindex), lp2);  
-							
-						}
-					});
-					kampfanimtestg=true;
-				}
-						
-			}
+//			Einheit feindeinheita = null;
+//			int i = 0;
+//			while (feindeinheita == null && i < allunits.size()) {
+//				if (allunits.get(i).isEnemy())
+//					feindeinheita = allunits.get(i);
+//
+//					i++;
+//			}
+//			if (feindeinheita != null) {
+//				int myindexg = allunits.indexOf(feindeinheita);
+//				if(allunits.get(myindexg).isKaempfen()==true && kampfanimtestg ==false)
+//				{	
+//					runOnUiThread(new Runnable() {
+//						
+//						@Override
+//						public void run() {
+//							Einheit feindeinheita = null;
+//							int i = 0, myindex;
+//							while (feindeinheita == null && i < allunits.size()) {
+//								if (allunits.get(i).isEnemy())
+//									feindeinheita = allunits.get(i);
+//								i++;
+//							}
+//							myindex = allunits.indexOf(feindeinheita);
+//							
+//							animationlaufzukampfg(myindex);
+//							@SuppressWarnings("deprecation")
+//							AbsoluteLayout al = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame);
+//			
+//							int x = allunits.get(myindex).getXx(); // hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
+//			
+//							
+//							@SuppressWarnings("deprecation")
+//							AbsoluteLayout.LayoutParams lp2 = new AbsoluteLayout.LayoutParams(
+//							s_walk_animation_g.getHeight(), 
+//							s_walk_animation_g.getWidth(),
+//							x,
+//							s_walk_animation_g.getTop());
+//									
+//							al.addView(einheitbilder.get(myindex), lp2);  
+//							
+//						}
+//					});
+//					kampfanimtestg=true;
+//				}
+//						
+//			}
 		obEinheittotist(); // Aufruf aus einem wiederholten Timertask
 		if (soldatbuttonactive) { //aktiviert den Button nach dem Cooldown wieder, Aufruf aus einem wiederholten Timertask
 			ImageButton thisimagebutton = (ImageButton) findViewById(R.id.imageButtonSoldat);
@@ -480,47 +608,57 @@ TimerTask timetaskg = new TimerTask() { //falls hitboxenerkennung  kampfanimatio
 		
 	};
 	Timer tg = new Timer();
-	tg.schedule(timetaskg, 0, 100); 
+	tg.schedule(timetaskg, 0, 300); 
 }
 
 private void testhitboxfeind(Einheit feindeinheit, Einheit eigeneEin) {
-	if (feindeinheit != null) {
+	if (feindeinheit != null) { // Bedingung: Das hei\sst eine feindliche Einheit wurde gefunden
 		if (feindeinheit.isamlaufen()) {
+			// die Einheit kaempft nicht und ist nicht am warten auf weitere Aktionsmoeglichkeiten
+			// dann kann die Einheit kaempfen
 			int feindindex = allunits.indexOf(feindeinheit);
-			if(eigeneEin == null) //wenn nur eine gegnerische  Einheit gespawnt ist
+			// nachfrage = 1 nur eine eigene Einheit
+			// nachfrage = 2 Einheit von beiden da
+			// nachfrage = 3 nur eine feindliche Einheit
+			if(nachfrage() == 3) //wenn nur eine gegnerische  Einheit gespawnt ist
 			{
-				
 				if(allunits.get(feindindex).getXx()<=60) //HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
 				{
 					Log.d("Kampf","GegnerEinheit läuft gegen die basis"); 
-					allunits.get(feindindex).setKaempfen(true);
-					hitboxtestg=false;//hört auf weiter zu checken
-					allunits.get(feindindex).setKaempfen(true); //gibt zurueck, dass die hitbox mit etwas kollidiert
-					timerstartboolg=false;
+					allunits.get(feindindex).setKaempfen(true);//hört auf weiter zu checken
+					allunits.get(feindindex).setamlaufen(false);; //gibt zurueck, dass die hitbox mit etwas kollidiert
+					try {
+						startkaempfeng();
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					} finally {
+						
+					}
 				}
-			} 
-			else if (eigeneEin.isamlaufen()){
-		//		Log.d("Hitboxen","Hitboxen Gegern werden aufgerufen");
+			}
+			else if ( nachfrage() == 2){ // eine eigene Einheit existiert
 				int xeigen = eigeneEin.getXx();
 				
+//				Log.d("Hitboxen","Hitboxen Gegern werden aufgerufen");
 				if (allunits.get(feindindex).getXx()<=(xeigen+130))
 				{
-					Log.d("Kampf","Es wird gekämpft");
 					allunits.get(feindindex).setamlaufen(false);
 					allunits.get(feindindex).setKaempfen(true);
+					try {
+						startkaempfeng();
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					} finally {
+						
+					}
 				}
 			}
 		}
 	}
-	
-
 }
 
-private void kaempfen(Einheit aneinheit) {
-	int index = allunits.indexOf(aneinheit);
-	// TODO
-	
-}
 
 //Diese Funktion ueberprueft, ob eine Einheit keine hp hat. Bei keinen hp kann sie die bisher
 //	bestehende Funktion gegner toeten aufrufen.
@@ -529,7 +667,11 @@ private void obEinheittotist() {
 		if ( eine.getHp() < 1) {
 			if ( eine.isEnemy() ) {
 				toetegegner_und_weiterlaufen();
+				endofarray--;
 			}
+			else {
+				//einheit toeten dann weiterlaufen
+				endofarray--;}
 		}
 	}
 }
@@ -550,7 +692,6 @@ public void spielGewinnen(View v){ //muss nachher in eine If bedingung in einen 
 
 public void toetegegner_und_weiterlaufen() {
 	aktuellesguthaben += 100;
-	
 	Einheit eigene = null;
 	int i = 0;
 	while (eigene == null && i < allunits.size()) {
@@ -577,9 +718,8 @@ public void toetegegner_und_weiterlaufen() {
 	
 	einheitbilder.set(eigenindex, new ImageView(GameActivity.this));  // erstellung eines neuen ImageViews für jeden Knopfdruck
 	einheitbilder.get(eigenindex).setImageResource(R.drawable.anim_stickman_walking);
-	@SuppressWarnings("deprecation")
-	AbsoluteLayout rl = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame); //Position des ImageViews
-
+	
+	//Position des ImageViews
 	int x = eigene.getXx();
 	@SuppressWarnings("deprecation")
 	AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(350, 350, x ,300);
@@ -588,33 +728,21 @@ public void toetegegner_und_weiterlaufen() {
 	
 	einheitbilder.remove(feindindex);
 	allunits.remove(feindindex);
-
-	kampfanimtest = false;
-	kampfanimtestg = false;
-	kampftest = true;
 	
-	feindl = null;
-	for (Einheit aEinheit : allunits) {
-		if (aEinheit.isEnemy()) feindl = aEinheit;
-	}
-	if (feindl == null) kampftestg = false;
-	
-	makegoagain();
-}
 
-private void makegoagain() {
-	Einheit eigene = null;
-	int i = 0;
+	eigene = null;
+	i = 0;
 	while (eigene == null && i < allunits.size()) {
 		if (allunits.get(i).isEnemy() == false)
 			eigene = allunits.get(i);
 
 		i++;
 	}
-	int eigenindex = allunits.indexOf(eigene);
+	eigenindex = allunits.indexOf(eigene);
 	allunits.get(eigenindex).setamlaufen(true);
 	gebelaufanim(einheitbilder.get(eigenindex));
 }
+
 
 public void SpawnKrieger(View v) //onClick Funktion, spawnt Krieger -> Dieser Knopf lässt gerade den gegnerischen Stickman sterben und lässt unseren an der Stelle weiterlaufen. wo er zuletzt gekämpft hat
 {
@@ -661,22 +789,50 @@ public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
 	Log.d("Pause", "Spiel wird pausiert!"); // eig soll das spiel hier pausieren, ich benutze den knopf gerade um gegner zu spawnen, ein gegner funktioniert genau wie unser Stickman, nur dass er nach links läuft, also der x wert kleiner wird
 	
 	int meinindex = endofarray;
-	ImageView gegnerspawn = feindsoldatpic();
-	einheitbilder.add(meinindex, gegnerspawn);
-	AbsoluteLayout grl = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame);
+	einheitbilder.add(meinindex, feindsoldatpic());
 	AbsoluteLayout.LayoutParams glp = new AbsoluteLayout.LayoutParams(350, 350,900,300);
-	grl.addView(einheitbilder.get(meinindex), glp);
-	gebelaufanimg(einheitbilder.get(meinindex));
+	rl.addView(einheitbilder.get(meinindex), glp);
 	
+	
+	gebelaufanimg(einheitbilder.get(meinindex));
 	
 	allunits.add(new Einheit(true, ARTSOLDAT));
 	allunits.get(meinindex).startwalktimer();
 	allunits.get(meinindex).setamlaufen(true);
-
-
-	kampftestg = true;
+	
 	endofarray++;
 
+}
+
+//Ueberpruefen von welchem Team Einheiten stehen
+// nachfrage = 0 keine Einheit
+// nachfrage = 1 nur eine eigene Einheit
+// nachfrage = 2 Einheit von beiden da
+// nachfrage = 3 nur eine feindliche Einheit
+private char nachfrage() {
+	Einheit eigen = null;
+	Einheit feind = null;
+	char returnchar = 0;
+	int i = 0;
+	while (!allunits.isEmpty() && ( i < allunits.size() 
+			&& (eigen == null || feind ==null) ) ) {
+		if (allunits.get(i).isEnemy() && feind == null) feind = allunits.get(i);
+		else if (eigen == null) eigen = allunits.get(i);
+	}
+	// beschriebene Werte werden zu != null
+	//	beschrieben sind Faelle au\sser der default wenn keine Einheit gespawnt ist
+	if (!allunits.isEmpty()) {
+		if ( eigen != null && feind != null ) { 
+			returnchar = 2;
+		}
+		if ( eigen != null && feind == null) {
+			returnchar = 1;
+		}
+		if ( eigen == null && feind != null ) {
+			returnchar = 3;
+		} 
+	} else returnchar = 0;
+	return returnchar;
 }
 
   
@@ -702,6 +858,9 @@ public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
         			if (einheitart == ARTSOLDAT) {
         				schaden = 5;
         				hp = 100;
+        			}
+        			if (einheitart == ARTBASE) {
+        				hp = 1000;
         			}
         	}
         	
@@ -763,10 +922,10 @@ public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
 
         }
         
-        private class Cooldown {
-        Timer ticktock;
-        int buttontyp;
-        public Cooldown (int millisecondstocooldown, int buttonart) {
+    private class Cooldown {
+    	Timer ticktock;
+    	int buttontyp;
+    	public Cooldown (int millisecondstocooldown, int buttonart) {
     		int end = millisecondstocooldown;
     		buttontyp = buttonart;
     		TimerTask activateagain = new TimerTask() {
@@ -782,8 +941,8 @@ public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
     		ticktock = new Timer();
     		ticktock.schedule(activateagain, end);
     	}
-        
-        }
+    
+    }
 }
 
 	

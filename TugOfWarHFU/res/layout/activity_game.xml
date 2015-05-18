@@ -46,33 +46,6 @@
         android:onClick="gamePause"
         android:src="@android:drawable/ic_media_pause" />
 
-    <ImageView
-        android:id="@+id/stickman_walk"
-        android:layout_width="54dp"
-        android:layout_height="106dp"
-        
-        android:layout_x="23dp"
-        android:layout_y="-150dp"
-        android:contentDescription="Animation"
-        android:visibility="invisible" />
-
-    <ImageView
-        android:id="@+id/stickman_fight"
-        android:layout_width="91dp"
-        android:layout_height="96dp"
-        android:layout_x="73dp"
-        android:layout_y="161dp"
-        android:visibility="invisible" />
-
-    <ImageView
-        android:id="@+id/stickman_walk_gegner"
-        android:layout_width="91dp"
-        android:layout_height="96dp"
-        android:layout_x="373dp"
-        android:layout_y="161dp"
-        android:src="@drawable/anim_stickman_walking_g" 
-        android:visibility="invisible"/>
-
     <Button
         android:id="@+id/button2"
         android:layout_width="wrap_content"

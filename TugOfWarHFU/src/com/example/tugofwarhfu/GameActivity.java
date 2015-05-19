@@ -2,7 +2,6 @@ package com.example.tugofwarhfu;
 
 
 import java.util.ArrayList;
-import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.lang.Thread;
@@ -90,7 +89,7 @@ boolean running=true;
 									@Override
 									public void run(){
 										aktuellesguthaben=aktuellesguthaben+1;
-//										goldstand.setText(String.valueOf("Gold "+aktuellesguthaben));
+										goldstand.setText(String.valueOf("Gold "+aktuellesguthaben));
 									}
 								});
 							}
@@ -168,15 +167,9 @@ boolean running=true;
 		{gold_handler.post(new Runnable() { @Override public void run() { 
 				gebelaufanimg(einheitbilder.get(jetztindex)); }}) ;}
 		
-//		// starte Animation
-//		AnimationDrawable frameanim = (AnimationDrawable) einheitbilder.get(meinindex).getBackground();
-//		frameanim.start(); //startet den Framewechsel
-		
 		allunits.get(jetztindex).setamlaufen(true); //Bedingung damit der Zähler zählt, wie ein switch
 		//teilt mit, dass die Einheit bereit zum kämpfen ist
-		
-		//Startet den Zähler für die X Berechnung
-		//Zaehler checkt nach ob switch amLaufen on ist, dann x++;
+
 		allunits.get(jetztindex).startwalktimer();
 		// dieser Block berechnet die X Koordinate unseres Stickmans
 		// Minh Notiz: nach unten verschoben
@@ -359,9 +352,10 @@ public void SpawnSoldat(View Buttonsoldat) //onClick Funktion, spawn Soldaten
 {
 	Log.d("Soldat", "Soldat wird gespawnt!");
 	ImageButton thisimagebutton = (ImageButton) findViewById(R.id.imageButtonSoldat);
-	thisimagebutton.setClickable(false);
+	
 	if((aktuellesguthaben>=20) && soldatbuttonactive)
 	{	
+		thisimagebutton.setClickable(false);
 		soldatbuttonactive = false;  //3 sec nicht wieder aktivierbar
 		int cooldowntime = 3000 ;
 		new Cooldown(cooldowntime, ARTSOLDAT);
@@ -529,24 +523,22 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 				}
 			}
 		}
-
-		private void calldmgbase(Einheit aneinheit) {
-			if (aneinheit.isEnemy()) baseown.bekommtschaden( aneinheit.getSchaden() + rand.nextInt(5) );
-			else baseene.bekommtschaden( aneinheit.getSchaden() + rand.nextInt(5) );
-		}
-
-		private void calldmgeinheit(Einheit aneinheit, Einheit feindeinheit) {
-			int indexa=allunits.indexOf(aneinheit), indexb=allunits.indexOf(feindeinheit);
-			allunits.get(indexa).bekommtschaden(allunits.get(indexb).getSchaden() + rand.nextInt(5));
-			allunits.get(indexb).bekommtschaden(allunits.get(indexa).getSchaden() + rand.nextInt(5));
-		}
 	};
 			
 	Timer thitb = new Timer();
 	thitb.schedule(hitboxtask, 0, 300);
 }
 
-	
+private void calldmgbase(Einheit aneinheit) {
+	if (aneinheit.isEnemy()) baseown.bekommtschaden( aneinheit.getSchaden() + rand.nextInt(5) );
+	else baseene.bekommtschaden( aneinheit.getSchaden() + rand.nextInt(5) );
+}
+
+private void calldmgeinheit(Einheit aneinheit, Einheit feindeinheit) {
+	int indexa=allunits.indexOf(aneinheit), indexb=allunits.indexOf(feindeinheit);
+	allunits.get(indexa).bekommtschaden(allunits.get(indexb).getSchaden() + rand.nextInt(5));
+	allunits.get(indexb).bekommtschaden(allunits.get(indexa).getSchaden() + rand.nextInt(5));
+}
 	
 //	TimerTask timetask = new TimerTask() { //falls hitboxenerkennung dann kampfanimation von eigenen Einheiten
 //		
@@ -826,10 +818,6 @@ private char nachfrage() {
 		public boolean isamlaufen() {
 			return laeuft;
 		}
-		
-		public boolean isKaempfen() {
-			return kaempft;
-		}
 
 		public void setKaempfen(boolean kaempfen) {
 			this.kaempft = kaempfen;
@@ -878,6 +866,8 @@ private char nachfrage() {
     			public void run() {
     				if (buttontyp == ARTSOLDAT) {
     					soldatbuttonactive = true;
+    					ImageView iv = (ImageView) findViewById(R.id.imageButtonSoldat);
+    					iv.setClickable(true);
     				}
     					
     			}

@@ -13,7 +13,7 @@
         android:layout_height="604dp"
         android:layout_x="0dp"
         android:layout_y="-100dp"
-        android:src="@drawable/hintergrund_real_version1" />
+        android:src="@drawable/hintergrund_final" />
 
     <ImageButton
         android:id="@+id/imageButtonSoldat"

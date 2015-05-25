@@ -12,12 +12,17 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.AbsoluteLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.AnimationDrawable;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.TranslateAnimation;
 
@@ -34,8 +39,8 @@ public class GameActivity extends Activity {
 	final int STDPOSY = 250;
 	
 	// Variablen Minh
-	EinheitFiFostack myUnits;// Einheiten
-	EinheitFiFostack enemyUnits;
+	EinheitFiFoStack myUnits;// Einheiten
+	EinheitFiFoStack enemyUnits;
 	boolean soldatbuttonactive = true;
 	int baseown;
 	int baseene;
@@ -123,10 +128,8 @@ boolean running=true;
 	protected void onStart(){ //passiert wenn die Activity gestartet wird
 		super.onStart();
 		Log.d("Start","Act.Start");
-		myUnits = new EinheitFiFostack(false);
-		myUnits.resetImageViews(new ImageView(this), new ImageView(this), new ImageView(this), new ImageView(this), new ImageView(this));
-		enemyUnits = new EinheitFiFostack(true);
-		enemyUnits.resetImageViews(new ImageView(this), new ImageView(this), new ImageView(this), new ImageView(this), new ImageView(this));
+		myUnits = new EinheitFiFoStack(false);
+		enemyUnits = new EinheitFiFoStack(true);
 		baseown = 1000;
 		baseene = 1000;
 	}
@@ -142,33 +145,43 @@ boolean running=true;
 	
 
 	private void erstelleSoldat(boolean isenemy) {
+		int xStartValue = 200;
 		if (!isenemy){
 			gold_handler.post(new Runnable() { @Override public void run() { 
 				ImageView neuerSoldat = new ImageView(returnContext());	
 				neuerSoldat.setImageResource(R.drawable.anim_stickman_walking);
 				// erstellung eines neuen ImageViews für jeden Knopfdruck
-				myUnits.addPic();
+				myUnits.images.addLast(neuerSoldat);
 			}}) ;
-			myUnits.addnewsoldat(); //TODO umschreiben fuer alle Units
-			xStartValue = myUnits.firstx();
+			myUnits.addnewsoldat();
+			xStartValue = Einheit.XSTARTMYUNIT;
 		} else {
 			gold_handler.post(new Runnable() { @Override public void run() { 
-				einheitbilder.add(feindsoldatpic());
+				ImageView neuerSoldat = new ImageView(returnContext());	
+				neuerSoldat.setImageResource(R.drawable.anim_stickman_walking_g);
+				enemyUnits.images.addLast(neuerSoldat);
 			}}) ; 
 			enemyUnits.addnewsoldat();
-			enemyUnits.firstx(); // TODO umschreiben fuer alle Gegner
+			xStartValue = Einheit.XSTARTENEMY;
 		}
 		
 		final AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(STDPOSWIDTH, STDPOSHEIGHT, xStartValue, STDPOSY);
 		gold_handler.post(new Runnable() { @Override public void run() { 
-		rl.addView(einheitbilder.get(0), lp); 
+		; 
 		}}) ;
 		if (!isenemy)
 		{gold_handler.post(new Runnable() { @Override public void run() { 
-			gebelaufanim(einheitbilder.get(0));
-			}}) ;} else
-		{gold_handler.post(new Runnable() { @Override public void run() { 
-				gebelaufanimg(einheitbilder.get(0)); }}) ;}
+			gebelaufanim(myUnits.images.peekLast());
+			AnimationDrawable myFrameToFrameAnim = (AnimationDrawable) myUnits.images.peekLast().getBackground();
+			rl.addView(myUnits.images.peekLast(), lp);
+			myFrameToFrameAnim.start();
+			}}) ;} else {
+				gold_handler.post(new Runnable() { @Override public void run() { 
+				gebelaufanim_g(enemyUnits.images.peekLast());
+				AnimationDrawable myFrameToFrameAnim = (AnimationDrawable) enemyUnits.images.peekLast().getBackground();
+				rl.addView(enemyUnits.images.peekLast(), lp);
+				myFrameToFrameAnim.start();
+				}}) ; }
 		
 		//Bedingung damit der Zähler zählt, wie ein switch
 		//teilt mit, dass die Einheit bereit zum kämpfen ist
@@ -180,35 +193,15 @@ boolean running=true;
 
 	
 	private void gebelaufanim(ImageView testnu) {
-		TranslateAnimation ta = stickman_walk_Animation();
+		Animation ta = AnimationUtils.loadAnimation(this, R.anim.horizontal_translate);
 		testnu.setAnimation(ta); // das neue image view wird sichtbar gemacht und ihm wird die animation zugewiesen
-		testnu.startAnimation(ta);
-	}
-	
-	private TranslateAnimation stickman_walk_Animation(){ //Bewegung des eigenen stickmans
-	    TranslateAnimation stickman_walking_animation = new TranslateAnimation(0.0f, 1000.0f,0.0f, 0.0f);
-	    stickman_walking_animation.setInterpolator(new LinearInterpolator());
-	    stickman_walking_animation.setDuration(10000);
-	    return stickman_walking_animation;
-	    };
-	    
-	private ImageView feindsoldatpic() {
-		ImageView gegnerspawn = new ImageView(GameActivity.this);
-		gegnerspawn.setImageResource(R.drawable.anim_stickman_walking_g);
-		return gegnerspawn;
+		testnu.getAnimation().start();
 	}
 
-	private void gebelaufanimg(ImageView feindsold) {
-		TranslateAnimation ta = stickman_walk_Animation_gegner();
+	private void gebelaufanim_g(ImageView feindsold) {
+		Animation ta = AnimationUtils.loadAnimation(this, R.anim.horizontal_translate_g);
 		feindsold.setAnimation(ta);
-		feindsold.startAnimation(ta);
-	}
-	
-	private TranslateAnimation stickman_walk_Animation_gegner(){ //Bewegung des gegnerischen Stickmans
-	    TranslateAnimation stickman_walking_animation_gegner = new TranslateAnimation(0.0f, -1000.0f,0.0f, 0.0f);
-	    stickman_walking_animation_gegner.setInterpolator(new LinearInterpolator());
-	    stickman_walking_animation_gegner.setDuration(10000);
-	    return stickman_walking_animation_gegner;
+		feindsold.getAnimation().start();
 	}
 	 
 	private void startkaempfen() {
@@ -218,10 +211,14 @@ boolean running=true;
 //	bringt die erste Einheit in den index
 
 //			gibt der Einheit eine neue Frame by Frame Animation
-		gold_handler.post(new Runnable() { @Override public void run() { 
-			animationlaufzukampf(0); // TODO fuer alle units
-		}}) ;
-	
+		AnimationDrawable ad = (AnimationDrawable) myUnits.images.peekFirst().getBackground();
+		ad.stop();
+		myUnits.images.peekFirst().setBackgroundResource(R.drawable.anim_stickman_kampf);
+		myUnits.images.peekFirst().getAnimation().cancel();
+		myUnits.images.peekFirst().getAnimation().reset();
+		ad = (AnimationDrawable) myUnits.images.peekFirst().getBackground();
+		ad.start();
+		
 //	setzt den x-wert, wo die Animation abgespielt werden soll
 		int x = 0;
 		x = myUnits.firstx();
@@ -232,7 +229,7 @@ boolean running=true;
 				x,
 				STDPOSY); //in welcher Hoehe neu ein ImageView gespawnt wird
 		gold_handler.post(new Runnable() { @Override public void run() { 
-		rl.addView(einheitbilder.get(0), lp2);  // TODO fuer alle Einheiten spaeter
+			myUnits.images.peekFirst().setLayoutParams(lp2);
 		}}) ;
 	}
 		
@@ -243,7 +240,13 @@ boolean running=true;
 		
 	
 		gold_handler.post(new Runnable() { @Override public void run() { 
-		animationlaufzukampf_g(1);
+			AnimationDrawable ad = (AnimationDrawable) enemyUnits.images.peekFirst().getBackground();
+			ad.stop();
+			enemyUnits.images.peekFirst().setBackgroundResource(R.drawable.anim_stickman_kampf_g);
+			enemyUnits.images.peekFirst().getAnimation().cancel();
+			enemyUnits.images.peekFirst().getAnimation().reset();
+			ad = (AnimationDrawable) enemyUnits.images.peekFirst().getBackground();
+			ad.start();
 		}}) ;
 		
 		int x = enemyUnits.firstx(); // hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
@@ -254,15 +257,15 @@ boolean running=true;
 		x,
 		STDPOSY);
 		gold_handler.post(new Runnable() { @Override public void run() { 
-			rl.addView(einheitbilder.get(1), lp2);  // TODO fuer alle Einheiten spaeter
+			enemyUnits.images.peekFirst().setLayoutParams(lp2);
 		}}) ;
 	}
 	
 	private Context returnContext() {
 		return this;
 	}
-	
-	private void animationlaufzukampf(int index) {
+	/** Veraenderungen werden vorgenommen
+	private void animationlaufzukampf() {
 		rl.removeView(einheitbilder.get(index)); //hier entferne ich die alte animation
 		einheitbilder.set(index, new ImageView(returnContext()));  // und erstelle hier die Kampfanimation
 		einheitbilder.get(index).setImageResource(R.drawable.anim_stickman_kampf);
@@ -275,6 +278,7 @@ boolean running=true;
 		einheitbilder.get(index).setImageResource(R.drawable.anim_stickman_kampf_g);
 //		Bild hizufuegen an anderer Stelle
 	}
+	*/
 	
 /*	protected void onResume(){ //passiert nach onStart() braucht ihr gerade eigentlich nicht beachten
 		super.onResume();
@@ -357,7 +361,7 @@ public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
 	erstelleSoldat(true);
 }
 
-
+// TODO get First umschreiben im Hauptteil und in dem Stack
 private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstart
 
 //				 nachfrage = 1 nur eine eigene Einheit
@@ -369,8 +373,8 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 	//		Log.d("Hitboxen","Hitboxen werden aufgerufen");
 			if(( myUnits.firstx() - enemyUnits.firstx() ) >= ABSTANDZWEISOLDATEN) // HITBOXEN! Einheit-X-Wert und Gegner-X-Wert
 			{ 
-				callDmgEinheit(myUnits.getEin1(), enemyUnits.getEin1()); // TODO test ob der Schaden nur in eine Richtung laeuft
-				callDmgEinheit(enemyUnits.getEin1(), myUnits.getEin1());
+				callDmgEinheit(myUnits.getFirst(), enemyUnits.getFirst()); // TODO test ob der Schaden nur in eine Richtung laeuft
+				callDmgEinheit(enemyUnits.getFirst(), myUnits.getFirst());
 				if ( myUnits.getEin1().isamlaufen()) {
 					myUnits.firstLaufenZuKaempfen(); // Laufen
 					try {
@@ -545,36 +549,46 @@ private void toeteeigen_und_weiterlaufen() { // oberer Teil wie toetegegner_und_
 	
 	gold_handler.post(new Runnable() { @Override public void run() { 
 	
-	einheitbilder.get(1).setImageDrawable(null); // TODO fuer alle Bilder umprogrammieren
+		
+		//loeschen von eigener Einheit - nur Bild
+	rl.removeView(myUnits.images.peekFirst());
+	myUnits.images.removeFirst();
 	
-	einheitbilder.set(1, new ImageView(GameActivity.this));
-	einheitbilder.get(1).setImageResource(R.drawable.anim_stickman_walking);
-	rl.removeView(einheitbilder.get(0));
+	// enden der Kampfanimation des Gegners
+	AnimationDrawable ad = (AnimationDrawable) enemyUnits.images.peekFirst().getBackground();
+	ad.stop();
+	enemyUnits.images.peekFirst().setBackgroundResource(R.drawable.anim_stickman_walking_g);
+	ad = (AnimationDrawable) enemyUnits.images.peekFirst().getBackground();
+	ad.start();
 	}}) ;
 	
 	//Position des feindlichen Soldaten
-	int x = enemyUnits.firstx();
+	int x = enemyUnits.firstx(); // TODO auch eine Aufgabe
 	final AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(STDPOSWIDTH, STDPOSHEIGHT, x, STDPOSY);
 	gold_handler.post(new Runnable() { @Override public void run() { 
-		rl.addView(einheitbilder.get(1), lp); //zurueckposten des Bildes vom feindlichen Soldaten
-		gebelaufanimg(einheitbilder.get(1)); //bewegen des Bildes
-		}}) ;
+		//zurueckposten des Bildes vom feindlichen Soldaten
+		enemyUnits.images.peekFirst().setLayoutParams(lp);
+		//bewegen des Bildes
+		enemyUnits.images.peekFirst().setAnimation(AnimationUtils.loadAnimation(returnContext(), R.anim.horizontal_translate_g));
+		enemyUnits.images.peekFirst().getAnimation().start();
+	}}) ;
 	//setzen der Zustandbooleans fuer den wieder laufenden feindlichen Soldaten
-	enemyUnits.firstKaempfenZuLaufen();
-	//loeschen des eigenen Soldaten aus den arrays
-	einheitbilder.remove(0);
-	myUnits.deleteEinheitCascade(); // boolean gibt zurueck ob es funktioniert hat
+	enemyUnits.firstKaempfenZuLaufen(); //TODO auch eine Aufgabe
+	//loeschen des eigenen Soldaten aus der Warteschlange / FIFO Stack
+	myUnits.deleteFirst(); // boolean gibt zurueck ob es funktioniert hat
 }
 
 private void toetegegner_und_weiterlaufen() {
 	aktuellesguthaben += 100; // Goldbonus fuer das toeten von gegnerischen Soldaten
 	
 	gold_handler.post(new Runnable() { @Override public void run() { 
-	einheitbilder.get(0).setImageDrawable(null);
-	einheitbilder.get(1).setImageDrawable(null);
-	
-	einheitbilder.set(0, new ImageView(GameActivity.this));  // erstellung eines neuen ImageViews für jeden Knopfdruck
-	einheitbilder.get(0).setImageResource(R.drawable.anim_stickman_walking);
+	rl.removeView(enemyUnits.images.peekFirst());
+	enemyUnits.images.removeFirst();
+	AnimationDrawable ad = (AnimationDrawable) myUnits.images.peekFirst().getBackground();
+	ad.stop();  
+	myUnits.images.peekFirst().setBackgroundResource(R.drawable.anim_stickman_walking);
+	ad = (AnimationDrawable) myUnits.images.peekFirst().getBackground();
+	ad.start();  
 	}}) ;
 	
 	
@@ -585,13 +599,12 @@ private void toetegegner_und_weiterlaufen() {
 	// Minh Notiz: Die hardgecodeten Layoutparameter habe ich hardgecoded gelassen.
 	final AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(50, 50, x ,300);
 	gold_handler.post(new Runnable() { @Override public void run() { 
-	rl.addView(einheitbilder.get(0), lp);
+	myUnits.images.peekFirst().setLayoutParams(lp);
 	}}) ;
-	myUnits.firstKaempfenZuLaufen();
+	// TODO aendern zu laufen
 	gold_handler.post(new Runnable() { @Override public void run() { 
-		gebelaufanim(einheitbilder.get(0)); } } );
-	einheitbilder.remove(1);
-	enemyUnits.firstKaempfenZuLaufen();;
+		myUnits.images.peekFirst().setAnimation(AnimationUtils.loadAnimation(returnContext(), R.anim.horizontal_translate));
+		myUnits.images.peekFirst().getAnimation().start(); } } );
 }
 
 

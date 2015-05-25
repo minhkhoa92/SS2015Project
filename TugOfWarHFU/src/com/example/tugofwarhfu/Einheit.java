@@ -8,6 +8,8 @@ import java.util.TimerTask;
 public class Einheit {
 	private final char ARTSOLDAT = 1;
 	private static final int DELAYTOSPEED = 1000;
+	public static final int XSTARTMYUNIT = 0;
+	public static final int XSTARTENEMY = 1000;
 	public int xx;
 	
 	private boolean laeuft = false;

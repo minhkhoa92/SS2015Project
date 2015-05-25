@@ -1,44 +1,39 @@
 package com.example.tugofwarhfu;
 
+import java.util.LinkedList;
+
 import android.widget.ImageView;
 
-public class EinheitFiFostack {
+public class EinheitFiFoStack {
 	final char ARTSOLDAT = 1;
 	
+	
+	public LinkedList<ImageView> images;
 	public Einheit ein1, ein2, ein3, ein4, ein5;
-	public ImageView ein1picture, ein2picture, ein3picture, ein4picture, ein5picture;
 	private char insPos, delPos;
 	private boolean isEnemy;
 	
-	public EinheitFiFostack(boolean gegner) {
+	public EinheitFiFoStack(boolean gegner) {
 		isEnemy = gegner;
 		ein1 = new Einheit(isEnemy, ARTSOLDAT); ein1.bekommtschaden(3000);
 		ein2 = new Einheit(isEnemy, ARTSOLDAT); ein2.bekommtschaden(3000);
 		ein3 = new Einheit(isEnemy, ARTSOLDAT); ein3.bekommtschaden(3000);
 		ein4 = new Einheit(isEnemy, ARTSOLDAT); ein4.bekommtschaden(3000);
 		ein5 = new Einheit(isEnemy, ARTSOLDAT); ein5.bekommtschaden(3000);
-		
+		images = new LinkedList<ImageView>();
 	}
 	
-	public void resetImageViews( ImageView img1, ImageView img2, ImageView img3, ImageView img4, ImageView img5) {
-		ein1picture = img1; ein2picture = img2; ein3picture = img3; ein4picture = img4; ein5picture = img5;
-	}
+// Bilder hinzufuegen befehl: ${stackname}.images.addLast(${ImageViewName});
+// Bild loeschen Befehl: ${stackname}.images.removeFirst();
+// Bild ersetzen ${stackname}.images.set(${int_index}, ${variablename});
 	
-
-	
-	public void addPic(){
-		// TODO picture add
-	}
-	
-	
-
 	
 	/**
 	* Anfang der zyklischen Warteschlange
 	*/
 	
 	//erstellt neuen Soldaten, wenn die Soldatenanzahl nicht die maximale Soldatenanzahlgrenze erreicht hat
-	private boolean addnewsoldat(){
+	protected boolean addnewsoldat(){
 		if ( ! (ein1.getHp() > 0 && (int) calcCount() < 1 ) ) { //bei 5 gefuellten items sind inspos und delpos auf der gleichen Stelle x, x - x ergibt count = 0
 			switch (insPos) {
 			case 0:
@@ -75,7 +70,7 @@ public class EinheitFiFostack {
 		} else {return false;}
 	}
 	
-	private boolean deleteFirst() {
+	protected boolean deleteFirst() {
 		if ( ( ( ein1.getHp() > 0 && (int) calcCount() == 0 )  || (int) calcCount() > 0) ) { //bei 5 gefuellten items sind inspos und delpos auf der gleichen Stelle x, x - x ergibt count = 0
 			switch (delPos) {
 			case 0:
@@ -114,6 +109,14 @@ public class EinheitFiFostack {
 		}
 		else if (delPos > insPos) { //insert Position ist vor delete Position
 			result = (char) (5 + insPos - delPos);
+		}
+		return result;
+	}
+	
+	public int getAnzahl(){
+		int result = calcCount();
+		if (result == 0 && ein1.getHp() > 0) {
+			result = 5;
 		}
 		return result;
 	}
@@ -204,25 +207,4 @@ public class EinheitFiFostack {
 		this.ein5 = ein5;
 	}
 
-	public ImageView getEin1picture() {
-		return ein1picture;
-	}
-
-	public ImageView getEin2picture() {
-		return ein2picture;
-	}
-
-	public ImageView getEin3picture() {
-		return ein3picture;
-	}
-
-	public ImageView getEin4picture() {
-		return ein4picture;
-	}
-
-	public ImageView getEin5picture() {
-		return ein5picture;
-	}
-
-	
 }

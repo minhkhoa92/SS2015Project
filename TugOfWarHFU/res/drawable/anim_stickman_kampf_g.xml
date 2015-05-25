@@ -7,6 +7,4 @@
     <item android:drawable="@drawable/stickman_kampf_4g" android:duration="200" />
     <item android:drawable="@drawable/stickman_kampf_3g" android:duration="200" />
     <item android:drawable="@drawable/stickman_kampf_2g" android:duration="200" />
-    
-
 </animation-list>

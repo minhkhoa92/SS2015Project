@@ -3,11 +3,10 @@
 
     android:oneshot="false"
     >
-    <item android:drawable="@drawable/stickman6" android:duration="800" />
-    <item android:drawable="@drawable/stickman5" android:duration="800" />
-    <item android:drawable="@drawable/stickman4" android:duration="800" />
-    <item android:drawable="@drawable/stickman3" android:duration="800" />
-    <item android:drawable="@drawable/stickman2" android:duration="800" />
-    <item android:drawable="@drawable/stickman1" android:duration="800" />
+    <item android:drawable="@drawable/stickman6" android:duration="200" />
+    <item android:drawable="@drawable/stickman5" android:duration="200" />
+    <item android:drawable="@drawable/stickman4" android:duration="200" />
+    <item android:drawable="@drawable/stickman3" android:duration="200" />
+    <item android:drawable="@drawable/stickman2" android:duration="200" />
   
 </animation-list>

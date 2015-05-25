@@ -20,8 +20,6 @@ public class Einheit {
 	private boolean kaempft = false;
 	
 	public Einheit(boolean isenemy, char kategorie){
-
-
 		xx = 0;
 		if (isenemy) xx = 1000;
 		enemy = isenemy;
@@ -32,8 +30,17 @@ public class Einheit {
 		}
 	}
 
+	public void soldatWerte (){
+		schaden = 5;
+		hp = 100;
+		einheitart = ARTSOLDAT;
+	}
 
-
+	public void resetX() {
+		xx = 0;
+		if (enemy) xx = 1000;
+	}
+	
 	public void startwalktimer() {
 		new Timer().scheduleAtFixedRate(new TimerAddX(), 0, DELAYTOSPEED);
 	}

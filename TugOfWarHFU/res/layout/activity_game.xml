@@ -45,7 +45,7 @@
         android:layout_y="322dp"
         android:onClick="gamePause"
         android:src="@android:drawable/ic_media_pause" />
-
+<!-- wird erst wieder beim testen gebraucht
     <Button
         android:id="@+id/button2"
         android:layout_width="wrap_content"
@@ -63,7 +63,7 @@
         android:layout_y="38dp"
         android:onClick="spielVerlieren"
         android:text="verlieren" />
-
+ -->
     <TextView
         android:id="@+id/gold_anzeige"
         android:layout_width="wrap_content"

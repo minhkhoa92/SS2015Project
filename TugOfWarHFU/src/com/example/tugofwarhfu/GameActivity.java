@@ -34,9 +34,8 @@ public class GameActivity extends Activity {
 	final int STDPOSY = 250;
 	
 	// Variablen Minh
-	ArrayList<Einheit> allunits;
-	ArrayList<ImageView> einheitbilder;
-	int endofarray = 0;
+	EinheitFiFostack myUnits;// Einheiten
+	EinheitFiFostack enemyUnits;
 	boolean soldatbuttonactive = true;
 	int baseown;
 	int baseene;
@@ -62,14 +61,7 @@ boolean running=true;
 	public void onCreate(Bundle savedInstanceState) { // passiert wenn die Activity erstellt wird
 	    super.onCreate(savedInstanceState);
 	    setContentView(R.layout.activity_game); 
-	    try {
-	    	rl = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame);
-	    } catch (Exception e) {
-	    	e.printStackTrace();
-	    }
-	    finally {
-	    	
-	    }
+	    rl = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame);
 	  
 		   
 			    //Goldschleife von Alex
@@ -131,8 +123,10 @@ boolean running=true;
 	protected void onStart(){ //passiert wenn die Activity gestartet wird
 		super.onStart();
 		Log.d("Start","Act.Start");
-		allunits = new ArrayList<Einheit>();
-		einheitbilder = new ArrayList<ImageView>();
+		myUnits = new EinheitFiFostack(false);
+		myUnits.resetImageViews(new ImageView(this), new ImageView(this), new ImageView(this), new ImageView(this), new ImageView(this));
+		enemyUnits = new EinheitFiFostack(true);
+		enemyUnits.resetImageViews(new ImageView(this), new ImageView(this), new ImageView(this), new ImageView(this), new ImageView(this));
 		baseown = 1000;
 		baseene = 1000;
 	}
@@ -148,48 +142,42 @@ boolean running=true;
 	
 
 	private void erstelleSoldat(boolean isenemy) {
-		final int jetztindex = endofarray;
 		if (!isenemy){
 			gold_handler.post(new Runnable() { @Override public void run() { 
-			einheitbilder.add(eigenersoldatpic());
+				ImageView neuerSoldat = new ImageView(returnContext());	
+				neuerSoldat.setImageResource(R.drawable.anim_stickman_walking);
+				// erstellung eines neuen ImageViews für jeden Knopfdruck
+				myUnits.addPic();
 			}}) ;
-		} else 
-		{ gold_handler.post(new Runnable() { @Override public void run() { 
+			myUnits.addnewsoldat(); //TODO umschreiben fuer alle Units
+			xStartValue = myUnits.firstx();
+		} else {
+			gold_handler.post(new Runnable() { @Override public void run() { 
 				einheitbilder.add(feindsoldatpic());
-			}}) ; }
+			}}) ; 
+			enemyUnits.addnewsoldat();
+			enemyUnits.firstx(); // TODO umschreiben fuer alle Gegner
+		}
 		
-		Einheit neueeinheit = new Einheit(isenemy, ARTSOLDAT);
-		
-		allunits.add(neueeinheit);
-		
-		final AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(STDPOSWIDTH, STDPOSHEIGHT,allunits.get(jetztindex).getXx(), STDPOSY);
+		final AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(STDPOSWIDTH, STDPOSHEIGHT, xStartValue, STDPOSY);
 		gold_handler.post(new Runnable() { @Override public void run() { 
-		rl.addView(einheitbilder.get(jetztindex), lp); 
+		rl.addView(einheitbilder.get(0), lp); 
 		}}) ;
 		if (!isenemy)
 		{gold_handler.post(new Runnable() { @Override public void run() { 
-			gebelaufanim(einheitbilder.get(jetztindex));
+			gebelaufanim(einheitbilder.get(0));
 			}}) ;} else
 		{gold_handler.post(new Runnable() { @Override public void run() { 
-				gebelaufanimg(einheitbilder.get(jetztindex)); }}) ;}
+				gebelaufanimg(einheitbilder.get(0)); }}) ;}
 		
-		allunits.get(jetztindex).setamlaufen(true); //Bedingung damit der Zähler zählt, wie ein switch
+		//Bedingung damit der Zähler zählt, wie ein switch
 		//teilt mit, dass die Einheit bereit zum kämpfen ist
 
-		allunits.get(jetztindex).startwalktimer();
+		
 		// dieser Block berechnet die X Koordinate unseres Stickmans
 		// Minh Notiz: nach unten verschoben
-
-		endofarray++;
 	}
 
-	private ImageView eigenersoldatpic() {
-		ImageView neuerSoldat = new ImageView(GameActivity.this);
-		neuerSoldat.setImageResource(R.drawable.anim_stickman_walking);
-		// erstellung eines neuen ImageViews für jeden Knopfdruck
-		
-		return neuerSoldat;
-	}
 	
 	private void gebelaufanim(ImageView testnu) {
 		TranslateAnimation ta = stickman_walk_Animation();
@@ -228,22 +216,15 @@ boolean running=true;
 
 
 //	bringt die erste Einheit in den index
-			Einheit einheita = null;
-			int i = 0;
-		while (einheita == null && i < allunits.size()) {
-			if (allunits.get(i).isEnemy() == false) einheita = allunits.get(i);
-			i++;
-		}
-		final int index = allunits.indexOf(einheita);
-	
+
 //			gibt der Einheit eine neue Frame by Frame Animation
 		gold_handler.post(new Runnable() { @Override public void run() { 
-			animationlaufzukampf(index);
+			animationlaufzukampf(0); // TODO fuer alle units
 		}}) ;
 	
 //	setzt den x-wert, wo die Animation abgespielt werden soll
 		int x = 0;
-		x = allunits.get(index).getXx();
+		x = myUnits.firstx();
 		// hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
 		final AbsoluteLayout.LayoutParams lp2 = new AbsoluteLayout.LayoutParams(
 				STDPOSWIDTH, 
@@ -251,28 +232,21 @@ boolean running=true;
 				x,
 				STDPOSY); //in welcher Hoehe neu ein ImageView gespawnt wird
 		gold_handler.post(new Runnable() { @Override public void run() { 
-		rl.addView(einheitbilder.get(index), lp2);
+		rl.addView(einheitbilder.get(0), lp2);  // TODO fuer alle Einheiten spaeter
 		}}) ;
 	}
 		
 
 	
 	private void startkaempfen_g() {
-		Log.d("Kampf","Es wird gekämpft");
-		Einheit feindeinheita = null;
-		int i = 0;
-		while (feindeinheita == null && i < allunits.size()) {
-			if (allunits.get(i).isEnemy())
-				feindeinheita = allunits.get(i);
-				i++;
-		}
-		final int myindexg = allunits.indexOf(feindeinheita);
+//		Log.d("Kampf","Es wird gekämpft");
+		
 	
 		gold_handler.post(new Runnable() { @Override public void run() { 
-		animationlaufzukampf_g(myindexg);
+		animationlaufzukampf_g(1);
 		}}) ;
 		
-		int x = feindeinheita.getXx(); // hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
+		int x = enemyUnits.firstx(); // hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
 
 		final AbsoluteLayout.LayoutParams lp2 = new AbsoluteLayout.LayoutParams(
 		STDPOSWIDTH, 
@@ -280,7 +254,7 @@ boolean running=true;
 		x,
 		STDPOSY);
 		gold_handler.post(new Runnable() { @Override public void run() { 
-			rl.addView(einheitbilder.get(myindexg), lp2);  
+			rl.addView(einheitbilder.get(1), lp2);  // TODO fuer alle Einheiten spaeter
 		}}) ;
 	}
 	
@@ -386,119 +360,90 @@ public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
 
 private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstart
 
-	
-			if (!allunits.isEmpty()) {
-				Einheit aneinheit = null;
-				int i = 0;
-				while (aneinheit == null && i < allunits.size()) {
-					// schaut nach eigenen Einheiten nach 
-					if (!allunits.get(i).isEnemy()) aneinheit = allunits.get(i);
-					i++;
-				}
-				Einheit feindeinheit = null;
-				i = 0;
-				//sobald Feindeinheit belegt ist, wird die Schleife beendet
-				while (feindeinheit == null && i < allunits.size()) {
-					// schaut nach feindlichen Einheiten nach
-					if (allunits.get(i).isEnemy()) feindeinheit = allunits.get(i);
-					i++;
-				}
-				
 //				 nachfrage = 1 nur eine eigene Einheit
 //				 nachfrage = 2 Einheit von beiden da
 //				 nachfrage = 3 nur eine feindliche Einheit
-				if ( (int)nachfrage() == 2) { //wenn eine eigene Einheit und eine Gegner Einheit gespawnt sind
-//					Log.d("Hitboxen","Hitboxen werden aufgerufen");
-					if(( aneinheit.getXx() - feindeinheit.getXx() ) >= ABSTANDZWEISOLDATEN) // HITBOXEN! Einheit-X-Wert und Gegner-X-Wert
-					{ 
-						calldmgeinheit(aneinheit, feindeinheit);
-					if ( aneinheit.isamlaufen()) {
-							try {
-								gold_handler.post(new Runnable() {@Override public void run(){startkaempfen();}
-								});
-								Log.d("Kampf","Es wird gekämpft");
-								aneinheit.setKaempfen(true); //gibt zurueck, dass die hitbox mit etwas kollidiert
-								aneinheit.setamlaufen(false);
-								allunits.set(allunits.indexOf(aneinheit), aneinheit);
-							}
-							catch (Exception e) {
-								e.printStackTrace();
-							} finally {
-								
-							}
+	char c = nachfrage();
+	switch (c) {
+		case 2: { //wenn eine eigene Einheit und eine Gegner Einheit gespawnt sind
+	//		Log.d("Hitboxen","Hitboxen werden aufgerufen");
+			if(( myUnits.firstx() - enemyUnits.firstx() ) >= ABSTANDZWEISOLDATEN) // HITBOXEN! Einheit-X-Wert und Gegner-X-Wert
+			{ 
+				callDmgEinheit(myUnits.getEin1(), enemyUnits.getEin1()); // TODO test ob der Schaden nur in eine Richtung laeuft
+				callDmgEinheit(enemyUnits.getEin1(), myUnits.getEin1());
+				if ( myUnits.getEin1().isamlaufen()) {
+					myUnits.firstLaufenZuKaempfen(); // Laufen
+					try {
+						gold_handler.post(new Runnable() {@Override public void run(){startkaempfen();}
+						});
+//						Log.d("Kampf","Es wird gekämpft");
 						}
-						Log.d("Hitboxen","Hitboxen Gegern werden aufgerufen");
-						
-					if (feindeinheit.isamlaufen()) {
-							try {
-								allunits.get(allunits.indexOf(feindeinheit)).setamlaufen(false);
-								allunits.get(allunits.indexOf(feindeinheit)).setKaempfen(true);
-								gold_handler.post(new Runnable() {@Override public void run() {startkaempfen_g();} });
-							}
-							catch (Exception e) {
-								e.printStackTrace();
-							} finally {
-								
-							}
-						}
+					catch (Exception e) {
+						e.printStackTrace();
 					}
 				}
-				
-				if((int)nachfrage() == 1) { //wenn nur eine eigene Einheit gespawnt ist
-
-					if(aneinheit.getXx() >= GRENZEFEINDLICHEBASIS) {//HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
-						calldmgbase(aneinheit);
-						if(aneinheit.isamlaufen()) {
-							Log.d("Kampf","Einheit läuft gegen die basis");
-							try {
-								aneinheit.setKaempfen(true); //gibt zurueck, dass die hitbox mit etwas kollidiert
-								aneinheit.setamlaufen(false);
-								allunits.set(allunits.indexOf(aneinheit), aneinheit);
-								gold_handler.post(new Runnable() {@Override public void run() {startkaempfen();} });
-							}
-							catch (Exception e) {
-								e.printStackTrace();
-							} finally {
-								
-							}		
-						}
-					}
-				}
-				
-				if((int)nachfrage() == 3) {
-					calldmgbase(feindeinheit);
-					//wenn nur eine gegnerische  Einheit gespawnt ist
-//					final boolean k = feindeinheit.isamlaufen();
-//					gold_handler.post(new Runnable() {@Override public void run() { goldstand.setText(Boolean.toString(k));} });
-					if(feindeinheit.getXx()<=60) {//HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
-						if (feindeinheit.isamlaufen()) {
-							Log.d("Kampf","GegnerEinheit läuft gegen die basis"); 
-							try {
-								allunits.get(allunits.indexOf(feindeinheit)).setKaempfen(true);//hört auf weiter zu checken
-								allunits.get(allunits.indexOf(feindeinheit)).setamlaufen(false);; //gibt zurueck, dass die hitbox mit etwas kollidiert
-								gold_handler.post(new Runnable() {@Override public void run() {startkaempfen_g();} });
-							}
-							catch (Exception e) {
-								e.printStackTrace();
-							} finally {
-								
-							}
-						}
+				Log.d("Hitboxen","Hitboxen Gegern werden aufgerufen");
+	
+				if (enemyUnits.getEin1().isamlaufen()) {
+					try {
+						enemyUnits.firstLaufenZuKaempfen();
+						gold_handler.post(new Runnable() {@Override public void run() {startkaempfen_g();} });
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
 				}
 			}
-		
+			break;
+		}
+	
+		case 1: { //wenn nur eine eigene Einheit gespawnt ist
+
+			if(myUnits.firstx() >= GRENZEFEINDLICHEBASIS) {//HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
+				calldmgbase(myUnits.getEin1());
+				if(myUnits.getEin1().isamlaufen()) {
+					Log.d("Kampf","Einheit läuft gegen die basis");
+					try {
+						myUnits.firstLaufenZuKaempfen();
+						gold_handler.post(new Runnable() {@Override public void run() {startkaempfen();} });
+					} catch (Exception e) {
+						e.printStackTrace();	
+					}
+				}
+			}
+			break;
+		}
+	
+		case 3: {
+			
+		//wenn nur eine gegnerische  Einheit gespawnt ist
+//					final boolean k = feindeinheit.isamlaufen();
+//					gold_handler.post(new Runnable() {@Override public void run() { goldstand.setText(Boolean.toString(k));} });
+			if(enemyUnits.firstx() <= 60) {//HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
+				calldmgbase(enemyUnits.getEin1());
+				if (enemyUnits.getEin1().isamlaufen()) {
+//					Log.d("Kampf","GegnerEinheit läuft gegen die basis"); 
+					try {
+						enemyUnits.firstLaufenZuKaempfen();
+						gold_handler.post(new Runnable() {@Override public void run() {startkaempfen_g();} });
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			break;
+		}
+	}
 }
 
 private void calldmgbase(Einheit aneinheit) {
-	if (aneinheit.isEnemy()) baseown -= ( aneinheit.getSchaden() + rand.nextInt(5) );
-	else baseene-= ( aneinheit.getSchaden() + rand.nextInt(5) );
+	if (aneinheit.isEnemy()) { baseown -= ( aneinheit.getSchaden() + rand.nextInt(5) );
+	} else { baseene-= ( aneinheit.getSchaden() + rand.nextInt(5) ); }
+	schauNachObBasisTotIst();
 }
 
-private void calldmgeinheit(Einheit aneinheit, Einheit feindeinheit) {
-	int indexa=allunits.indexOf(aneinheit), indexb=allunits.indexOf(feindeinheit);
-	allunits.get(indexa).bekommtschaden(allunits.get(indexb).getSchaden() + rand.nextInt(5));
-	allunits.get(indexb).bekommtschaden(allunits.get(indexa).getSchaden() + rand.nextInt(5));
+private void callDmgEinheit(Einheit a, Einheit b) {
+	a.bekommtschaden(b.getSchaden() + rand.nextInt(5));
 	// aufraeumen von toten Soldaten (Einheiten)
 	obEinheitTotIst();
 }
@@ -564,132 +509,89 @@ private void calldmgeinheit(Einheit aneinheit, Einheit feindeinheit) {
 //Diese Funktion ueberprueft, ob eine Einheit keine hp hat. Bei keinen hp kann sie die bisher
 //	bestehende Funktion gegner toeten aufrufen.
 private void obEinheitTotIst() {
-	if (endofarray>0){
-		for (Einheit eine : allunits) {
-			if ( eine.getHp() < 1) {
-				if ( eine.isEnemy() ) {
-					toetegegner_und_weiterlaufen();
-					endofarray--;
-				} else {
-					//einheit toeten dann weiterlaufen
-					toeteeigen_und_weiterlaufen();
-					endofarray--;}
-			}
+	if (enemyUnits.firstSchauObTot()){
+		toetegegner_und_weiterlaufen();
+	} else {
+		//einheit toeten dann weiterlaufen
+		if ( myUnits.firstSchauObTot()) {
+			toeteeigen_und_weiterlaufen();
 		}
 	}
 }
 
+private void schauNachObBasisTotIst() {
+	if (baseene < 1) {
+		spielGewinnen();
+	}
+	if (baseown < 1) {
+		spielVerlieren();
+	}
+}
 
-
-public void spielVerlieren(View v){ //muss nachher in eine If bedingung in einen Timer rein, die z.B. alles halbe sekunde checkt, ob eine Base zerstört ist
-	
+public void spielVerlieren(){ //muss nachher in eine If bedingung in einen Timer rein, die z.B. alles halbe sekunde checkt, ob eine Base zerstört ist
 	Intent intent = new Intent (this, LoseActivity.class);
 	startActivity(intent);
 	finish();
 }
 
-public void spielGewinnen(View v){ //muss nachher in eine If bedingung in einen Timer rein, die z.B. alles halbe sekunde checkt, ob eine Base zerstört ist
-	
+public void spielGewinnen(){ //muss nachher in eine If bedingung in einen Timer rein, die z.B. alles halbe sekunde checkt, ob eine Base zerstört ist
 	Intent intent = new Intent (this, WinActivity.class);
 	startActivity(intent);
 	finish();
 }
 
 private void toeteeigen_und_weiterlaufen() { // oberer Teil wie toetegegner_und_weiterlaufen
-	Einheit eigene = null;
-	int i = 0;
-	while (eigene == null && i < allunits.size()) {
-		if (allunits.get(i).isEnemy() == false) {eigene = allunits.get(i);} i++; }
-	final int eigenindex = allunits.indexOf(eigene);
-	Einheit feindl = null; i = 0;
-	while (feindl == null && i < allunits.size()) {
-		if (allunits.get(i).isEnemy() == true) {feindl = allunits.get(i);} i++; }
-	final int feindindex = allunits.indexOf(feindl);
 	//Indexe der Einheiten geholt, die gekaempft haben.
 	
 	gold_handler.post(new Runnable() { @Override public void run() { 
-	rl.removeView(einheitbilder.get(eigenindex));
-	einheitbilder.get(feindindex).setImageDrawable(null);
 	
-	einheitbilder.set(feindindex, new ImageView(GameActivity.this));
-	einheitbilder.get(feindindex).setImageResource(R.drawable.anim_stickman_walking);
+	einheitbilder.get(1).setImageDrawable(null); // TODO fuer alle Bilder umprogrammieren
+	
+	einheitbilder.set(1, new ImageView(GameActivity.this));
+	einheitbilder.get(1).setImageResource(R.drawable.anim_stickman_walking);
+	rl.removeView(einheitbilder.get(0));
 	}}) ;
 	
 	//Position des feindlichen Soldaten
-	int x = feindl.getXx();
+	int x = enemyUnits.firstx();
 	final AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(STDPOSWIDTH, STDPOSHEIGHT, x, STDPOSY);
 	gold_handler.post(new Runnable() { @Override public void run() { 
-		rl.addView(einheitbilder.get(feindindex), lp); //zurueckposten des Bildes vom feindlichen Soldaten
-		gebelaufanimg(einheitbilder.get(feindindex)); //bewegen des Bildes
+		rl.addView(einheitbilder.get(1), lp); //zurueckposten des Bildes vom feindlichen Soldaten
+		gebelaufanimg(einheitbilder.get(1)); //bewegen des Bildes
 		}}) ;
 	//setzen der Zustandbooleans fuer den wieder laufenden feindlichen Soldaten
-	allunits.get(feindindex).setamlaufen(true);
-	allunits.get(feindindex).setKaempfen(false);
-	
+	enemyUnits.firstKaempfenZuLaufen();
 	//loeschen des eigenen Soldaten aus den arrays
-	einheitbilder.remove(eigenindex);
-	allunits.remove(eigenindex);
+	einheitbilder.remove(0);
+	myUnits.deleteEinheitCascade(); // boolean gibt zurueck ob es funktioniert hat
 }
 
 private void toetegegner_und_weiterlaufen() {
-	aktuellesguthaben += 100;
-	Einheit eigene = null;
-	int i = 0;
-	while (eigene == null && i < allunits.size()) {
-		if (allunits.get(i).isEnemy() == false)
-			eigene = allunits.get(i);
-
-		i++;
-	}
-	final int eigenindex = allunits.indexOf(eigene);
-	
-	Einheit feindl = null;
-	i = 0;
-	while (feindl == null && i < allunits.size()) {
-		if (allunits.get(i).isEnemy() == true)
-			feindl = allunits.get(i);
-
-		i++;
-	}
-	final int feindindex = allunits.indexOf(feindl);
+	aktuellesguthaben += 100; // Goldbonus fuer das toeten von gegnerischen Soldaten
 	
 	gold_handler.post(new Runnable() { @Override public void run() { 
-	einheitbilder.get(eigenindex).setImageDrawable(null);
-	einheitbilder.get(feindindex).setImageDrawable(null);
+	einheitbilder.get(0).setImageDrawable(null);
+	einheitbilder.get(1).setImageDrawable(null);
 	
-	einheitbilder.set(eigenindex, new ImageView(GameActivity.this));  // erstellung eines neuen ImageViews für jeden Knopfdruck
-	einheitbilder.get(eigenindex).setImageResource(R.drawable.anim_stickman_walking);
+	einheitbilder.set(0, new ImageView(GameActivity.this));  // erstellung eines neuen ImageViews für jeden Knopfdruck
+	einheitbilder.get(0).setImageResource(R.drawable.anim_stickman_walking);
 	}}) ;
 	
 	
 	//Position des ImageViews
-	int x = eigene.getXx();
+	int x = myUnits.firstx();
 	
 	// Die Layoutparameter sind die Standardwerte in den Feldern auch oben angegeben.
 	// Minh Notiz: Die hardgecodeten Layoutparameter habe ich hardgecoded gelassen.
 	final AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(50, 50, x ,300);
 	gold_handler.post(new Runnable() { @Override public void run() { 
-	rl.addView(einheitbilder.get(eigenindex), lp);
+	rl.addView(einheitbilder.get(0), lp);
 	}}) ;
-	allunits.get(eigenindex).setKaempfen(false);
-	
-	einheitbilder.remove(feindindex);
-	allunits.remove(feindindex);
-	
-	final int neueigenindex;
-	eigene = null;
-	i = 0;
-	while (eigene == null && i < allunits.size()) {
-		if (allunits.get(i).isEnemy() == false)
-			eigene = allunits.get(i);
-
-		i++;
-	}
-	neueigenindex = allunits.indexOf(eigene);
-	allunits.get(neueigenindex).setamlaufen(true);
+	myUnits.firstKaempfenZuLaufen();
 	gold_handler.post(new Runnable() { @Override public void run() { 
-	gebelaufanim(einheitbilder.get(neueigenindex));
-	}}) ;
+		gebelaufanim(einheitbilder.get(0)); } } );
+	einheitbilder.remove(1);
+	enemyUnits.firstKaempfenZuLaufen();;
 }
 
 
@@ -711,26 +613,17 @@ public void autoErstellenNachChar ( char c) { // selbstaendiges erstellen von Ei
 // nachfrage = 2 Einheit von beiden da
 // nachfrage = 3 nur eine feindliche Einheit
 private char nachfrage() {
-	Einheit eigen = null;
-	Einheit feind = null;
 	char returnchar = 0;
-	int i = 0;
-	while (!allunits.isEmpty() && ( i < allunits.size() 
-			&& (eigen == null || feind == null) ) ) {
-		if (allunits.get(i).isEnemy() && feind == null) feind = allunits.get(i);
-		else if (eigen == null) eigen = allunits.get(i);
-		i++;
-	}
 	// beschriebene Werte werden zu != null
 	//	beschrieben sind Faelle au\sser der default wenn keine Einheit gespawnt ist
-	if (!allunits.isEmpty()) {
-		if ( eigen != null && feind != null ) { 
+	if (myUnits.getAnzahl() > 0 || enemyUnits.getAnzahl() > 0) {
+		if ( myUnits.getAnzahl() > 0 && enemyUnits.getAnzahl() > 0 ) { 
 			returnchar = 2;
 		}
-		if ( eigen != null && feind == null) {
+		if ( myUnits.getAnzahl() > 0 && enemyUnits.getAnzahl() < 1) {
 			returnchar = 1;
 		}
-		if ( eigen == null && feind != null ) {
+		if ( myUnits.getAnzahl() < 1 && enemyUnits.getAnzahl() > 0 ) {
 			returnchar = 3;
 		} 
 	} else returnchar = 0;

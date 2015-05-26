@@ -14,8 +14,6 @@ public class LoseActivity extends Activity{
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
 	    setContentView(R.layout.activity_lose);
-	
-	    // TODO Auto-generated method stub
 	    
 	
 

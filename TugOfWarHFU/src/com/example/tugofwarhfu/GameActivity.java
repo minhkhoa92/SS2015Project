@@ -361,7 +361,6 @@ public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
 	erstelleSoldat(true);
 }
 
-// TODO get First umschreiben im Hauptteil und in dem Stack
 private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstart
 
 //				 nachfrage = 1 nur eine eigene Einheit
@@ -373,10 +372,10 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 	//		Log.d("Hitboxen","Hitboxen werden aufgerufen");
 			if(( myUnits.firstx() - enemyUnits.firstx() ) >= ABSTANDZWEISOLDATEN) // HITBOXEN! Einheit-X-Wert und Gegner-X-Wert
 			{ 
-				callDmgEinheit(myUnits.getFirst(), enemyUnits.getFirst()); // TODO test ob der Schaden nur in eine Richtung laeuft
-				callDmgEinheit(enemyUnits.getFirst(), myUnits.getFirst());
-				if ( myUnits.getEin1().isamlaufen()) {
-					myUnits.firstLaufenZuKaempfen(); // Laufen
+				callDmgEinheit(enemyUnits.getFirstData()); // TODO test ob der Schaden nur in eine Richtung laeuft
+				callDmgEinheit(myUnits.getFirstData());
+				if ( myUnits.getFirstData().isamlaufen()) {
+					myUnits.aendernZuKaempfenStart(myUnits.getDelPos()); // Laufen
 					try {
 						gold_handler.post(new Runnable() {@Override public void run(){startkaempfen();}
 						});
@@ -386,11 +385,11 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 						e.printStackTrace();
 					}
 				}
-				Log.d("Hitboxen","Hitboxen Gegern werden aufgerufen");
+//				Log.d("Hitboxen","Hitboxen Gegern werden aufgerufen");
 	
-				if (enemyUnits.getEin1().isamlaufen()) {
+				if (enemyUnits.getFirstData().isamlaufen()) {
 					try {
-						enemyUnits.firstLaufenZuKaempfen();
+						enemyUnits.aendernZuKaempfenStart(enemyUnits.getDelPos());
 						gold_handler.post(new Runnable() {@Override public void run() {startkaempfen_g();} });
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -403,12 +402,12 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 		case 1: { //wenn nur eine eigene Einheit gespawnt ist
 
 			if(myUnits.firstx() >= GRENZEFEINDLICHEBASIS) {//HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
-				calldmgbase(myUnits.getEin1());
-				if(myUnits.getEin1().isamlaufen()) {
-					Log.d("Kampf","Einheit läuft gegen die basis");
+				calldmgbase(myUnits.getFirstData());
+				if(myUnits.getFirstData().isamlaufen()) {
+//					Log.d("Kampf","Einheit läuft gegen die basis");
 					try {
-						myUnits.firstLaufenZuKaempfen();
-						gold_handler.post(new Runnable() {@Override public void run() {startkaempfen();} });
+						myUnits.aendernZuKaempfenStart(myUnits.getDelPos());
+						gold_handler.post(new Runnable() {@Override public void run() {startkaempfen();} }); // TODO kaempfen pruefen
 					} catch (Exception e) {
 						e.printStackTrace();	
 					}
@@ -423,11 +422,11 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 //					final boolean k = feindeinheit.isamlaufen();
 //					gold_handler.post(new Runnable() {@Override public void run() { goldstand.setText(Boolean.toString(k));} });
 			if(enemyUnits.firstx() <= 60) {//HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
-				calldmgbase(enemyUnits.getEin1());
-				if (enemyUnits.getEin1().isamlaufen()) {
+				calldmgbase(enemyUnits.getFirstData());
+				if (enemyUnits.getFirstData().isamlaufen()) {
 //					Log.d("Kampf","GegnerEinheit läuft gegen die basis"); 
 					try {
-						enemyUnits.firstLaufenZuKaempfen();
+						enemyUnits.aendernZuKaempfenStart(enemyUnits.getDelPos());
 						gold_handler.post(new Runnable() {@Override public void run() {startkaempfen_g();} });
 					}
 					catch (Exception e) {
@@ -446,8 +445,10 @@ private void calldmgbase(Einheit aneinheit) {
 	schauNachObBasisTotIst();
 }
 
-private void callDmgEinheit(Einheit a, Einheit b) {
-	a.bekommtschaden(b.getSchaden() + rand.nextInt(5));
+private void callDmgEinheit(Einheit angreifer) {
+	if (angreifer.isEnemy()) 
+	myUnits.firstBekommtSchaden(angreifer.getSchaden() + rand.nextInt(5));
+	else if (!angreifer.isEnemy()) enemyUnits.firstBekommtSchaden(angreifer.getSchaden() + rand.nextInt(5));
 	// aufraeumen von toten Soldaten (Einheiten)
 	obEinheitTotIst();
 }
@@ -563,7 +564,7 @@ private void toeteeigen_und_weiterlaufen() { // oberer Teil wie toetegegner_und_
 	}}) ;
 	
 	//Position des feindlichen Soldaten
-	int x = enemyUnits.firstx(); // TODO auch eine Aufgabe
+	int x = enemyUnits.firstx();
 	final AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(STDPOSWIDTH, STDPOSHEIGHT, x, STDPOSY);
 	gold_handler.post(new Runnable() { @Override public void run() { 
 		//zurueckposten des Bildes vom feindlichen Soldaten
@@ -573,7 +574,7 @@ private void toeteeigen_und_weiterlaufen() { // oberer Teil wie toetegegner_und_
 		enemyUnits.images.peekFirst().getAnimation().start();
 	}}) ;
 	//setzen der Zustandbooleans fuer den wieder laufenden feindlichen Soldaten
-	enemyUnits.firstKaempfenZuLaufen(); //TODO auch eine Aufgabe
+	enemyUnits.aendernZuLaufenStart(enemyUnits.getDelPos());
 	//loeschen des eigenen Soldaten aus der Warteschlange / FIFO Stack
 	myUnits.deleteFirst(); // boolean gibt zurueck ob es funktioniert hat
 }
@@ -601,7 +602,7 @@ private void toetegegner_und_weiterlaufen() {
 	gold_handler.post(new Runnable() { @Override public void run() { 
 	myUnits.images.peekFirst().setLayoutParams(lp);
 	}}) ;
-	// TODO aendern zu laufen
+	myUnits.aendernZuLaufenStart(myUnits.getDelPos());
 	gold_handler.post(new Runnable() { @Override public void run() { 
 		myUnits.images.peekFirst().setAnimation(AnimationUtils.loadAnimation(returnContext(), R.anim.horizontal_translate));
 		myUnits.images.peekFirst().getAnimation().start(); } } );

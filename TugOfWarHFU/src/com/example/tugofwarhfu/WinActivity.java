@@ -15,7 +15,6 @@ public class WinActivity extends Activity{
 	    super.onCreate(savedInstanceState);
 	    setContentView(R.layout.activity_win);
 	
-	    // TODO Auto-generated method stub
 	    
 	
 

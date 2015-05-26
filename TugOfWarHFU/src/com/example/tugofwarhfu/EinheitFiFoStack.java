@@ -10,7 +10,7 @@ public class EinheitFiFoStack {
 	
 	public LinkedList<ImageView> images;
 	public Einheit ein1, ein2, ein3, ein4, ein5;
-	private char insPos, delPos;
+	private char insPos, delPos, workPos;
 	private boolean isEnemy;
 	
 	public EinheitFiFoStack(boolean gegner) {
@@ -136,75 +136,155 @@ public class EinheitFiFoStack {
 	*/
 	
 	
-
+	protected Einheit getFirstData(){
+		switch (delPos) {
+		case 0:
+			return ein1;
+		case 1:
+			return ein2;
+		case 2:
+			return ein3;
+		case 3:
+			return ein4;
+		case 4: 
+			return ein5;
+		default: // nur fuer den compiler error
+			return ein1;
+		}
+	}
 
 	public int firstx () {
-		return getEin1().getXx();
+		return getFirstData().getXx();
 	}
 	
 	public int firstdmg () {
-		return getEin1().getSchaden();
+		return getFirstData().getSchaden();
 	}
 	
-	public int firstKriegtSchadenAufSich(int i) {
-		ein1.bekommtschaden(i);
+	public void firstBekommtSchaden(int i) {
+		switch (delPos) {
+		case 0:
+			ein1.bekommtschaden(i);
+			break;
+		case 1:
+			ein2.bekommtschaden(i);
+			break;
+		case 2:
+			ein3.bekommtschaden(i);
+			break;
+		case 3:
+			ein4.bekommtschaden(i);
+			break;
+		case 4: 
+			ein5.bekommtschaden(i);
+			break;
+		}
+	}
+	
+	
+	
+	public void aendernZuKaempfenStart(char c) { // TODO kaempfen einbringen
+		switch (c) {
+		case 0:
+			ein1.setamlaufen(false);
+//			if (workPos == 0) ein1.setKaempfen(true);
+			break;
+		case 1:
+			ein2.setamlaufen(false);
+//			if (workPos == 0) ein2.setKaempfen(true);
+			break;
+		case 2:
+			ein3.setamlaufen(false);
+//			if (workPos == 0) ein3.setKaempfen(true);
+			break;
+		case 3:
+			ein4.setamlaufen(false);
+//			if (workPos == 0) ein4.setKaempfen(true);
+			break;
+		case 4: 
+			ein5.setamlaufen(false);
+//			if (workPos == 0) ein5.setKaempfen(true);
+			break;
+		}
+		if (getAnzahl() >= workPos) {
+			char oldPos = workPos;
+			workPos ++;
+			char newPos = (char) ((delPos + workPos) % 5);
+			if ( total( getDataFromPos(oldPos).getXx() - getDataFromPos(newPos).getXx() ) <= 275 )
+				aendernZuKaempfenStart(newPos);
+		}
+	}
+	
+	private int total(int i) {
+		if (i < 0 ) i*= -1;
 		return i;
 	}
 	
-	public void firstLaufenZuKaempfen() {
-		ein1.setamlaufen(false);
-		ein1.setKaempfen(true);
+	private Einheit getDataFromPos(char c) {
+		switch (c) {
+		case 0:
+			return ein1;
+		case 1:
+			return ein2;
+		case 2:
+			return ein3;
+		case 3:
+			return ein4;
+		case 4: 
+			return ein5;
+		default: // nur fuer den compiler error
+			return ein1;
+		}
 	}
 	
-	public void firstKaempfenZuLaufen() {
-		ein1.setamlaufen(true);
-		ein1.setKaempfen(false);
+	public void aendernZuLaufenStart(char c) { // TODO kaempfen einbringen
+		switch (c) {
+		case 0:
+			ein1.setamlaufen(true);
+//			ein1.setKaempfen(false);
+			break;
+		case 1:
+			ein2.setamlaufen(true);
+//			ein2.setKaempfen(false);
+			break;
+		case 2:
+			ein3.setamlaufen(true);
+//			ein3.setKaempfen(false);
+			break;
+		case 3:
+			ein4.setamlaufen(true);
+//			ein4.setKaempfen(false);
+			break;
+		case 4: 
+			ein5.setamlaufen(true);
+//			ein5.setKaempfen(false);
+			break;
+		}
+		if (getAnzahl() >= workPos) {
+			char oldPos = workPos;
+			workPos ++;
+			char newPos = (char) ((delPos + workPos) % 5);
+			if ( total( getDataFromPos(oldPos).getXx() - getDataFromPos(newPos).getXx() ) <= 275 )
+				aendernZuKaempfenStart(newPos);
+		}
 	}
 	
 	public boolean firstSchauObTot(){
-		if (ein1.getHp() < 1){
+		if (getFirstData().getHp() < 1){
 			return true;
 		} else return false;
 	}
-	
-	public Einheit getEin1() {
-		return ein1;
+
+	public char getWorkpos() {
+		return workPos;
 	}
 
-	public void setEin1(Einheit ein1) {
-		this.ein1 = ein1;
+	public void setWorkpos(char workpos) {
+		this.workPos = workpos;
 	}
 
-	public Einheit getEin2() {
-		return ein2;
-	}
-
-	public void setEin2(Einheit ein2) {
-		this.ein2 = ein2;
-	}
-
-	public Einheit getEin3() {
-		return ein3;
-	}
-
-	public void setEin3(Einheit ein3) {
-		this.ein3 = ein3;
-	}
-
-	public Einheit getEin4() {
-		return ein4;
-	}
-
-	public void setEin4(Einheit ein4) {
-		this.ein4 = ein4;
-	}
-
-	public Einheit getEin5() {
-		return ein5;
-	}
-
-	public void setEin5(Einheit ein5) {
-		this.ein5 = ein5;
+	public char getDelPos() {
+		return delPos;
 	}
 
 }

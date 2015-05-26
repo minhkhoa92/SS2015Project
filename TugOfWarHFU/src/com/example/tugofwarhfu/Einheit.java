@@ -66,8 +66,8 @@ public class Einheit {
 
 	public void laufe() {
 		if (amLaufen() && hp > 0) {
-			if (isEnemy()) xx -= 100 ;
-			else if (!isEnemy()) xx += 100;
+			if (isEnemy()) xx -= 25 ;
+			else if (!isEnemy()) xx += 25;
 			}
 		}
 	

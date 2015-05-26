@@ -26,7 +26,7 @@ import android.view.animation.AnimationUtils;
 public class GameActivity extends Activity {
 
 	// Konstanten Minh
-	private static final int DELAYTOSPEED = 700;
+	private static final int DELAYTOSPEED = 500;
 	private final int ARTSOLDAT = 1;
 	private final int ABSTANDZWEISOLDATEN = 130;
 	public static final int GRENZEFEINDLICHEBASIS = 820;
@@ -199,7 +199,7 @@ TextView leben_blau;
 		feindSold.getAnimation().start();
 	}
 	 
-	private void startKaempfen() { // TODO fue alle Einheiten
+	private void startKaempfen() {
 		
 //	setzt den x-wert, wo die Animation abgespielt werden soll
 		int x = 0;
@@ -271,42 +271,63 @@ public void SpawnSoldat(View Buttonsoldat) //onClick Funktion, spawn Soldaten
 		new Cooldown(cooldowntime, ARTSOLDAT);
 		aktuellesguthaben=aktuellesguthaben-20;	//zaehler ist der Goldwert, der Soldat kostet gerade 20 Gold
 		erstelleSoldat(false);
-	}
+	} else if (myUnits.getAnzahl() == 5 ){ popUpMessages("Limit ist bei 5."); }
 }
 
 public void SpawnKrieger(View v) //onClick Funktion, spawnt Krieger -> Dieser Knopf lässt gerade den gegnerischen Stickman sterben und lässt unseren an der Stelle weiterlaufen. wo er zuletzt gekämpft hat
 {
 	
 //	Log.d("kek","methode wird aufgerufen");
-
-	startKaempfen_g();
-	new Handler().postDelayed(new Runnable() {
-		
-		@Override
-		public void run() {
-			weiterlaufen(true, enemyUnits.getDelPos(), 0);
-			
-		}
-	}, 5000);
+	popUpMessages("Tut nichts.");
+//	stillStehen(true, enemyUnits.images.peekFirst(), enemyUnits.firstx());
 	
 }
 public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
 {
-//	Log.d("Pause", "Spiel wird pausiert!"); // eig soll das spiel hier pausieren, ich benutze den knopf gerade um gegner zu spawnen, ein gegner funktioniert genau wie unser Stickman, nur dass er nach links läuft, also der x wert kleiner wird
-	
-	erstelleSoldat(true);
+	popUpMessages("Tut nichts.");
+//	erstelleSoldat(true);
 }
 
-
+private void stillStehen(final boolean isEnemy, int id, final int xPos) {
+	final ImageView iv = (ImageView) findViewById(id);
+	platzierenDerEinheiten.post(new Runnable() {
+		@Override
+		public void run() {
+			iv.getAnimation().cancel();
+			iv.setAnimation(null);
+			iv.setLayoutParams(new AbsoluteLayout.LayoutParams(STDPOSWIDTH, STDPOSHEIGHT, xPos, STDPOSY));
+			if (!isEnemy)
+				iv.setImageResource(R.drawable.stickman3);
+			else if (isEnemy)
+				iv.setImageResource(R.drawable.stickman3_g);
+		}
+	});
+	
+}
 
 private void aktualisiereSpiel() { // hitboxerkennung und Kampferkennung timerstart
 
 	if ( myUnits.getAnzahl() > 0 ) { 
-		myUnits.teamEinSchrittVor(); 
+		myUnits.teamEinSchrittVor();
+		int i = 1;
+		while (i < 5){
+			if (!myUnits.getDataFromPos( ( myUnits.getDelPos() + i ) % 5 ).amLaufen() &&
+					myUnits.getDataFromPos( ( myUnits.getDelPos() + i ) % 5 ).getHp() > 0)
+				stillStehen(false, myUnits.images.get(i), myUnits.getDataFromPos( ( myUnits.getDelPos() + i ) % 5 ).getXx());
+			i++;
 		}
+	}
 	if ( enemyUnits.getAnzahl() > 0 ) { 
 		enemyUnits.teamEinSchrittVor();
+		int i = 1;
+		while (i < 5){
+			if (!enemyUnits.getDataFromPos( ( enemyUnits.getDelPos() + i ) % 5 ).amLaufen() &&
+					enemyUnits.getDataFromPos( ( enemyUnits.getDelPos() + i ) % 5 ).getHp() > 0)
+				stillStehen(true, enemyUnits.images.get(i), enemyUnits.getDataFromPos( ( enemyUnits.getDelPos() + i ) % 5 ).getXx());
+			i++;
 		}
+	}
+		
 			
 //				 nachfrage = 1 nur eine eigene Einheit
 //				 nachfrage = 2 Einheit von beiden da
@@ -639,7 +660,33 @@ private int nachfrage() {
 	return returnint;
 }
 
-  
+  private void popUpMessages (final String message) {
+	  new Handler().post(new Runnable() {
+		
+		@Override
+		public void run() {
+			TextView txt = (TextView) findViewById(R.id.messages);
+			txt.setText(message);
+			txt.setVisibility(View.VISIBLE);
+			txt.setAnimation(null);
+		}
+	});
+	  final Animation anim = AnimationUtils.loadAnimation(returnContext(), R.anim.fade_two_sec);
+	  new Handler().postDelayed((new Runnable() {
+			
+			@Override
+			public void run() {
+				TextView txt = (TextView) findViewById(R.id.messages);
+				if ( txt.getAnimation() == null ) {
+				txt.setAnimation(anim);
+				anim.start();
+				}
+				txt.setVisibility(View.INVISIBLE);
+				
+				
+			}
+		}) , 2000);
+  }
 	
         
     private class Cooldown {

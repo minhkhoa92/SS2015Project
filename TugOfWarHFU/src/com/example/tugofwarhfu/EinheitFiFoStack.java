@@ -174,10 +174,28 @@ public class EinheitFiFoStack {
 	}
 	
 	public void teamEinSchrittVor(){
-		ein1.laufe(); ein2.laufe(); ein3.laufe(); ein4.laufe(); ein5.laufe();
+		if ( !teamAmKaempfen ) {
+			ein1.laufe(); ein2.laufe(); ein3.laufe(); ein4.laufe(); ein5.laufe();
+		} else if ( teamAmKaempfen ) {
+			int saveWorkPos = workPos;
+			workPos = 100;
+			int checkPos = delPos + 1;
+			if ( ( total( getDataFromPos(delPos).getXx() - getDataFromPos( ( checkPos ) % 5 ).getXx() ) <= GameActivity.ABSTANDZWEIEINHEITEN ) 
+					&& ( getDataFromPos( ( checkPos ) % 5 ).getHp() > 0 ) )
+				aendernZuKaempfenStart(( checkPos ) % 5);
+			checkPos++;
+			while ( checkPos - delPos < 5) {
+				if ( ( total( getDataFromPos( ( checkPos - 1 ) % 5 ).getXx() - getDataFromPos( ( checkPos ) % 5 ).getXx() ) <= GameActivity.ABSTANDZWEIEINHEITEN ) 
+						&& ( getDataFromPos( (checkPos ) % 5 ).getHp() > 0 ) )
+					aendernZuKaempfenStart((checkPos ) % 5);
+			checkPos++;
+			}
+			workPos = saveWorkPos;
+		}
+		
 	}
 	
-	public void aendernZuKaempfenStart(int c) { // TODO kaempfen einbringen
+	public void aendernZuKaempfenStart(int c) {
 		teamAmKaempfen = true;
 		switch (c) {
 		case 0:

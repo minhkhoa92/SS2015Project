@@ -2,15 +2,13 @@ package com.example.tugofwarhfu;
 
 import java.util.LinkedList;
 
-import android.widget.ImageView;
-
 public class EinheitFiFoStack {
-	final char ARTSOLDAT = 1;
+	final int ARTSOLDAT = 1;
 	
 	
-	public LinkedList<ImageView> images;
+	public LinkedList<Integer> images;
 	public Einheit ein1, ein2, ein3, ein4, ein5;
-	private char insPos, delPos, workPos;
+	private int insPos, delPos, workPos;
 	private boolean isEnemy;
 	
 	public EinheitFiFoStack(boolean gegner) {
@@ -20,7 +18,8 @@ public class EinheitFiFoStack {
 		ein3 = new Einheit(isEnemy, ARTSOLDAT); ein3.bekommtschaden(3000);
 		ein4 = new Einheit(isEnemy, ARTSOLDAT); ein4.bekommtschaden(3000);
 		ein5 = new Einheit(isEnemy, ARTSOLDAT); ein5.bekommtschaden(3000);
-		images = new LinkedList<ImageView>();
+		images = new LinkedList<Integer>();
+		insPos = 0; delPos = 0;
 	}
 	
 // Bilder hinzufuegen befehl: ${stackname}.images.addLast(${ImageViewName});
@@ -65,7 +64,7 @@ public class EinheitFiFoStack {
 				break;
 			}
 			insPos++;
-			insPos = (char) (insPos % 5);
+			insPos = (int) (insPos % 5);
 			return true;
 		} else {return false;}
 	}
@@ -97,18 +96,18 @@ public class EinheitFiFoStack {
 				break;
 			}
 			delPos++;
-			delPos = (char) (delPos % 5);
+			delPos = (int) (delPos % 5);
 			return true;
 		} else {return false;}
 	}
 	
-	private char calcCount(){
-		char result = 7;
+	private int calcCount(){
+		int result = 7;
 		if (insPos >= delPos) {// insPos weiter vorne oder gleich delPos
-			result = (char) (insPos - delPos);
+			result = (int) (insPos - delPos);
 		}
 		else if (delPos > insPos) { //insert Position ist vor delete Position
-			result = (char) (5 + insPos - delPos);
+			result = (int) (5 + insPos - delPos);
 		}
 		return result;
 	}
@@ -131,7 +130,7 @@ public class EinheitFiFoStack {
 		else { return Integer.toString(calcCount()); }
 	}
 	
-	/**
+	/*
 	* Ende der zyklischen Warteschlange
 	*/
 	
@@ -183,7 +182,7 @@ public class EinheitFiFoStack {
 	
 	
 	
-	public void aendernZuKaempfenStart(char c) { // TODO kaempfen einbringen
+	public void aendernZuKaempfenStart(int c) { // TODO kaempfen einbringen
 		switch (c) {
 		case 0:
 			ein1.setamlaufen(false);
@@ -207,9 +206,9 @@ public class EinheitFiFoStack {
 			break;
 		}
 		if (getAnzahl() >= workPos) {
-			char oldPos = workPos;
+			int oldPos = workPos;
 			workPos ++;
-			char newPos = (char) ((delPos + workPos) % 5);
+			int newPos = (int) ((delPos + workPos) % 5);
 			if ( total( getDataFromPos(oldPos).getXx() - getDataFromPos(newPos).getXx() ) <= 275 )
 				aendernZuKaempfenStart(newPos);
 		}
@@ -220,7 +219,7 @@ public class EinheitFiFoStack {
 		return i;
 	}
 	
-	private Einheit getDataFromPos(char c) {
+	private Einheit getDataFromPos(int c) {
 		switch (c) {
 		case 0:
 			return ein1;
@@ -237,7 +236,7 @@ public class EinheitFiFoStack {
 		}
 	}
 	
-	public void aendernZuLaufenStart(char c) { // TODO kaempfen einbringen
+	public void aendernZuLaufenStart(int c) { // TODO kaempfen einbringen
 		switch (c) {
 		case 0:
 			ein1.setamlaufen(true);
@@ -261,9 +260,9 @@ public class EinheitFiFoStack {
 			break;
 		}
 		if (getAnzahl() >= workPos) {
-			char oldPos = workPos;
+			int oldPos = workPos;
 			workPos ++;
-			char newPos = (char) ((delPos + workPos) % 5);
+			int newPos = (int) ((delPos + workPos) % 5);
 			if ( total( getDataFromPos(oldPos).getXx() - getDataFromPos(newPos).getXx() ) <= 275 )
 				aendernZuKaempfenStart(newPos);
 		}
@@ -275,15 +274,15 @@ public class EinheitFiFoStack {
 		} else return false;
 	}
 
-	public char getWorkpos() {
+	public int getWorkpos() {
 		return workPos;
 	}
 
-	public void setWorkpos(char workpos) {
+	public void setWorkpos(int workpos) {
 		this.workPos = workpos;
 	}
 
-	public char getDelPos() {
+	public int getDelPos() {
 		return delPos;
 	}
 

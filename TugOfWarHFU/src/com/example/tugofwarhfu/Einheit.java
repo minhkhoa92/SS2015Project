@@ -6,7 +6,7 @@ import java.util.TimerTask;
 //import android.util.Log;
 
 public class Einheit {
-	private final char ARTSOLDAT = 1;
+	private final int ARTSOLDAT = 1;
 	private static final int DELAYTOSPEED = 1000;
 	public static final int XSTARTMYUNIT = 0;
 	public static final int XSTARTENEMY = 1000;
@@ -17,11 +17,11 @@ public class Einheit {
 	private int schaden = 0;
 	
 
-	private char einheitart;
+	private int einheitart;
 	private boolean enemy;
 	private boolean kaempft = false;
 	
-	public Einheit(boolean isenemy, char kategorie){
+	public Einheit(boolean isenemy, int kategorie){
 		xx = 0;
 		if (isenemy) xx = 1000;
 		enemy = isenemy;

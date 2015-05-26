@@ -1,7 +1,6 @@
 package com.example.tugofwarhfu;
 
 
-import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Random;
@@ -12,8 +11,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.AbsoluteLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -23,20 +20,19 @@ import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.view.animation.LinearInterpolator;
-import android.view.animation.TranslateAnimation;
 
 
 @SuppressWarnings("deprecation")
 public class GameActivity extends Activity {
 
 	// Konstanten Minh
-	private final char ARTSOLDAT = 1;
+	private final int ARTSOLDAT = 1;
 	private final int ABSTANDZWEISOLDATEN = 130;
 	private final int GRENZEFEINDLICHEBASIS = 820;
-	final int STDPOSWIDTH = 150;
-	final int STDPOSHEIGHT = 250;
-	final int STDPOSY = 250;
+	private final int GRENZEEIGENEBASIS = 820;
+	final int STDPOSWIDTH = 100;
+	final int STDPOSHEIGHT = 150;
+	final int STDPOSY = 500;
 	
 	// Variablen Minh
 	EinheitFiFoStack myUnits;// Einheiten
@@ -47,6 +43,7 @@ public class GameActivity extends Activity {
 	private int stringpos = 0;
 	AbsoluteLayout rl;
 	protected Random rand;
+	Handler platzierenDerEinheiten;
 
 	
 	//Variablen von ALex
@@ -55,8 +52,8 @@ public class GameActivity extends Activity {
 TextView sekunden_anzeige;
 TextView goldstand;
 int aktuellesguthaben=100;
-Handler gold_handler;
 boolean running=true;
+Handler gold_handler;
 
 
 //Variable von Alex Ende
@@ -71,7 +68,8 @@ boolean running=true;
 		   
 			    //Goldschleife von Alex
 			    goldstand=(TextView) findViewById(R.id.gold_anzeige);
-				gold_handler=new Handler();
+			    gold_handler = new Handler();
+				
 				
 					TimerTask timetask = new TimerTask() {  //eigentliche Schleife, die Gold dazuaddiert
 					
@@ -99,12 +97,12 @@ boolean running=true;
 				
 				
 				//Anfang von Stringaufruf fuer Einheitenreihenfolge (Bot)
-				
+				platzierenDerEinheiten=new Handler();
 				TimerTask timertask = new TimerTask() {
 					@Override public void run() {
 						// bot, autoerstellen
 						// bei jedem 'a' wird ein feindlicher Soldat erstellt
-						autoErstellenNachChar(getString(R.string.einheiten_erstellen).charAt(stringpos)); stringpos++; 
+						autoErstellenNachint(getString(R.string.einheiten_erstellen).charAt(stringpos)); stringpos++; 
 						} };
 				new Timer().schedule(timertask, 5000, 1000);
 				
@@ -119,7 +117,7 @@ boolean running=true;
 				// nachfrage = 1 nur eine eigene Einheit
 				// nachfrage = 2 Einheit von beiden da
 				// nachfrage = 3 nur eine feindliche Einheit
-				if ((int)nachfrage() > 0) testhitundkampf();
+/**				if ((int)nachfrage() > 0) testhitundkampf(); */
 				
 				} };
 				new Timer().schedule(timernUeberpruefen, 4000, 200);
@@ -145,44 +143,35 @@ boolean running=true;
 	
 
 	private void erstelleSoldat(boolean isenemy) {
-		int xStartValue = 200;
+		final AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams
+				(STDPOSWIDTH, STDPOSHEIGHT, Einheit.XSTARTMYUNIT, STDPOSY);
 		if (!isenemy){
-			gold_handler.post(new Runnable() { @Override public void run() { 
+			platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
 				ImageView neuerSoldat = new ImageView(returnContext());	
 				neuerSoldat.setImageResource(R.drawable.anim_stickman_walking);
+				int id = View.generateViewId();
+				neuerSoldat.setId(id);
 				// erstellung eines neuen ImageViews für jeden Knopfdruck
-				myUnits.images.addLast(neuerSoldat);
+//				myUnits.images.addLast(neuerSoldat);
+				rl.addView(neuerSoldat, lp);
+				myUnits.images.addLast(id);
+				gebelaufanim(id);
 			}}) ;
 			myUnits.addnewsoldat();
-			xStartValue = Einheit.XSTARTMYUNIT;
 		} else {
-			gold_handler.post(new Runnable() { @Override public void run() { 
+			enemyUnits.addnewsoldat();
+			platzierenDerEinheiten.post(new Runnable() { @Override public void run() {
+				AbsoluteLayout.LayoutParams lpNew = new AbsoluteLayout.LayoutParams
+						(STDPOSWIDTH, STDPOSHEIGHT, Einheit.XSTARTENEMY, STDPOSY);
 				ImageView neuerSoldat = new ImageView(returnContext());	
 				neuerSoldat.setImageResource(R.drawable.anim_stickman_walking_g);
-				enemyUnits.images.addLast(neuerSoldat);
-			}}) ; 
-			enemyUnits.addnewsoldat();
-			xStartValue = Einheit.XSTARTENEMY;
+				int id = View.generateViewId();
+				neuerSoldat.setId(id);
+				enemyUnits.images.addLast(id);
+				rl.addView(neuerSoldat, lpNew);
+				gebelaufanim_g(id);
+			}}) ;
 		}
-		
-		final AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(STDPOSWIDTH, STDPOSHEIGHT, xStartValue, STDPOSY);
-		gold_handler.post(new Runnable() { @Override public void run() { 
-		; 
-		}}) ;
-		if (!isenemy)
-		{gold_handler.post(new Runnable() { @Override public void run() { 
-			gebelaufanim(myUnits.images.peekLast());
-			AnimationDrawable myFrameToFrameAnim = (AnimationDrawable) myUnits.images.peekLast().getBackground();
-			rl.addView(myUnits.images.peekLast(), lp);
-			myFrameToFrameAnim.start();
-			}}) ;} else {
-				gold_handler.post(new Runnable() { @Override public void run() { 
-				gebelaufanim_g(enemyUnits.images.peekLast());
-				AnimationDrawable myFrameToFrameAnim = (AnimationDrawable) enemyUnits.images.peekLast().getBackground();
-				rl.addView(enemyUnits.images.peekLast(), lp);
-				myFrameToFrameAnim.start();
-				}}) ; }
-		
 		//Bedingung damit der Zähler zählt, wie ein switch
 		//teilt mit, dass die Einheit bereit zum kämpfen ist
 
@@ -192,32 +181,21 @@ boolean running=true;
 	}
 
 	
-	private void gebelaufanim(ImageView testnu) {
-		Animation ta = AnimationUtils.loadAnimation(this, R.anim.horizontal_translate);
-		testnu.setAnimation(ta); // das neue image view wird sichtbar gemacht und ihm wird die animation zugewiesen
-		testnu.getAnimation().start();
+	private void gebelaufanim(int id) {
+		Animation ta = AnimationUtils.loadAnimation(returnContext(), R.anim.horizontal_translate);
+		ImageView iv_eigenSold = (ImageView) findViewById(id);
+		iv_eigenSold.setAnimation(ta); // das neue image view wird sichtbar gemacht und ihm wird die animation zugewiesen
+		iv_eigenSold.getAnimation().start();
 	}
 
-	private void gebelaufanim_g(ImageView feindsold) {
-		Animation ta = AnimationUtils.loadAnimation(this, R.anim.horizontal_translate_g);
-		feindsold.setAnimation(ta);
-		feindsold.getAnimation().start();
+	private void gebelaufanim_g(int id) {
+		Animation ta = AnimationUtils.loadAnimation(returnContext(), R.anim.horizontal_translate_g);
+		ImageView feindSold = (ImageView) findViewById(id);
+		feindSold.setAnimation(ta);
+		feindSold.getAnimation().start();
 	}
 	 
-	private void startkaempfen() {
-//		runOnUiThread(new Runnable() { //über runOnUiThread() kann man auf die Imageviews aus dem Mainthread zu greifen
-
-
-//	bringt die erste Einheit in den index
-
-//			gibt der Einheit eine neue Frame by Frame Animation
-		AnimationDrawable ad = (AnimationDrawable) myUnits.images.peekFirst().getBackground();
-		ad.stop();
-		myUnits.images.peekFirst().setBackgroundResource(R.drawable.anim_stickman_kampf);
-		myUnits.images.peekFirst().getAnimation().cancel();
-		myUnits.images.peekFirst().getAnimation().reset();
-		ad = (AnimationDrawable) myUnits.images.peekFirst().getBackground();
-		ad.start();
+	private void startKaempfen() { // TODO fue alle Einheiten
 		
 //	setzt den x-wert, wo die Animation abgespielt werden soll
 		int x = 0;
@@ -228,8 +206,21 @@ boolean running=true;
 				STDPOSHEIGHT,
 				x,
 				STDPOSY); //in welcher Hoehe neu ein ImageView gespawnt wird
-		gold_handler.post(new Runnable() { @Override public void run() { 
-			myUnits.images.peekFirst().setLayoutParams(lp2);
+		platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
+//			bringt die erste Einheit in den index
+			ImageView iv = (ImageView) findViewById(myUnits.images.peekFirst());
+			iv.setLayoutParams(lp2);
+//			gibt der Einheit eine neue Frame by Frame Animation
+		
+			
+		AnimationDrawable ad = (AnimationDrawable) iv.getDrawable();
+		if (ad.isRunning()) ad.stop();
+		
+		iv.getAnimation().cancel();
+		iv.setAnimation(null);
+		iv.setBackground(null);
+		iv.setImageResource(R.drawable.anim_stickman_kampf);
+		if (!ad.isRunning()) ad.start();
 		}}) ;
 	}
 		
@@ -238,17 +229,6 @@ boolean running=true;
 	private void startkaempfen_g() {
 //		Log.d("Kampf","Es wird gekämpft");
 		
-	
-		gold_handler.post(new Runnable() { @Override public void run() { 
-			AnimationDrawable ad = (AnimationDrawable) enemyUnits.images.peekFirst().getBackground();
-			ad.stop();
-			enemyUnits.images.peekFirst().setBackgroundResource(R.drawable.anim_stickman_kampf_g);
-			enemyUnits.images.peekFirst().getAnimation().cancel();
-			enemyUnits.images.peekFirst().getAnimation().reset();
-			ad = (AnimationDrawable) enemyUnits.images.peekFirst().getBackground();
-			ad.start();
-		}}) ;
-		
 		int x = enemyUnits.firstx(); // hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
 
 		final AbsoluteLayout.LayoutParams lp2 = new AbsoluteLayout.LayoutParams(
@@ -256,8 +236,16 @@ boolean running=true;
 		STDPOSHEIGHT,
 		x,
 		STDPOSY);
-		gold_handler.post(new Runnable() { @Override public void run() { 
-			enemyUnits.images.peekFirst().setLayoutParams(lp2);
+		platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
+			ImageView iv = (ImageView) findViewById(enemyUnits.images.peekFirst());
+			AnimationDrawable ad = (AnimationDrawable) iv.getDrawable();
+			if (ad.isRunning()) ad.stop();
+			
+			iv.getAnimation().cancel();
+			iv.setAnimation(null);
+			iv.setImageResource(R.drawable.anim_stickman_kampf_g);
+			if ( !ad.isRunning() ) ad.start();
+			iv.setLayoutParams(lp2);
 		}}) ;
 	}
 	
@@ -352,7 +340,8 @@ public void SpawnKrieger(View v) //onClick Funktion, spawnt Krieger -> Dieser Kn
 {
 	
 	Log.d("kek","methode wird aufgerufen");
-	toetegegner_und_weiterlaufen();
+	startkaempfen_g();
+//	toetegegner_und_weiterlaufen();
 }
 public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
 {
@@ -361,12 +350,14 @@ public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
 	erstelleSoldat(true);
 }
 
+
+
 private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstart
 
 //				 nachfrage = 1 nur eine eigene Einheit
 //				 nachfrage = 2 Einheit von beiden da
 //				 nachfrage = 3 nur eine feindliche Einheit
-	char c = nachfrage();
+	int c = nachfrage();
 	switch (c) {
 		case 2: { //wenn eine eigene Einheit und eine Gegner Einheit gespawnt sind
 	//		Log.d("Hitboxen","Hitboxen werden aufgerufen");
@@ -375,22 +366,21 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 				callDmgEinheit(enemyUnits.getFirstData()); // TODO test ob der Schaden nur in eine Richtung laeuft
 				callDmgEinheit(myUnits.getFirstData());
 				if ( myUnits.getFirstData().isamlaufen()) {
+					myUnits.setWorkpos((int) 0);
 					myUnits.aendernZuKaempfenStart(myUnits.getDelPos()); // Laufen
 					try {
-						gold_handler.post(new Runnable() {@Override public void run(){startkaempfen();}
-						});
-//						Log.d("Kampf","Es wird gekämpft");
+						startKaempfen();
 						}
 					catch (Exception e) {
 						e.printStackTrace();
 					}
 				}
-//				Log.d("Hitboxen","Hitboxen Gegern werden aufgerufen");
 	
 				if (enemyUnits.getFirstData().isamlaufen()) {
 					try {
+						enemyUnits.setWorkpos((int) 0);
 						enemyUnits.aendernZuKaempfenStart(enemyUnits.getDelPos());
-						gold_handler.post(new Runnable() {@Override public void run() {startkaempfen_g();} });
+						startkaempfen_g();
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -402,12 +392,13 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 		case 1: { //wenn nur eine eigene Einheit gespawnt ist
 
 			if(myUnits.firstx() >= GRENZEFEINDLICHEBASIS) {//HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
-				calldmgbase(myUnits.getFirstData());
+				callDmgBase(myUnits.getFirstData());
 				if(myUnits.getFirstData().isamlaufen()) {
 //					Log.d("Kampf","Einheit läuft gegen die basis");
 					try {
+						myUnits.setWorkpos((int) 0);
 						myUnits.aendernZuKaempfenStart(myUnits.getDelPos());
-						gold_handler.post(new Runnable() {@Override public void run() {startkaempfen();} }); // TODO kaempfen pruefen
+						startKaempfen();
 					} catch (Exception e) {
 						e.printStackTrace();	
 					}
@@ -422,12 +413,13 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 //					final boolean k = feindeinheit.isamlaufen();
 //					gold_handler.post(new Runnable() {@Override public void run() { goldstand.setText(Boolean.toString(k));} });
 			if(enemyUnits.firstx() <= 60) {//HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
-				calldmgbase(enemyUnits.getFirstData());
+				callDmgBase(enemyUnits.getFirstData());
 				if (enemyUnits.getFirstData().isamlaufen()) {
 //					Log.d("Kampf","GegnerEinheit läuft gegen die basis"); 
 					try {
+						enemyUnits.setWorkpos((int) 0);
 						enemyUnits.aendernZuKaempfenStart(enemyUnits.getDelPos());
-						gold_handler.post(new Runnable() {@Override public void run() {startkaempfen_g();} });
+						startkaempfen_g();
 					}
 					catch (Exception e) {
 						e.printStackTrace();
@@ -439,9 +431,11 @@ private void testhitundkampf() { // hitboxerkennung und Kampferkennung timerstar
 	}
 }
 
-private void calldmgbase(Einheit aneinheit) {
-	if (aneinheit.isEnemy()) { baseown -= ( aneinheit.getSchaden() + rand.nextInt(5) );
-	} else { baseene-= ( aneinheit.getSchaden() + rand.nextInt(5) ); }
+
+
+private void callDmgBase(Einheit anEinheit) {
+	if (anEinheit.isEnemy()) { baseown -= ( anEinheit.getSchaden() + rand.nextInt(5) );
+	} else { baseene-= ( anEinheit.getSchaden() + rand.nextInt(5) ); }
 	schauNachObBasisTotIst();
 }
 
@@ -548,32 +542,32 @@ public void spielGewinnen(){ //muss nachher in eine If bedingung in einen Timer 
 private void toeteeigen_und_weiterlaufen() { // oberer Teil wie toetegegner_und_weiterlaufen
 	//Indexe der Einheiten geholt, die gekaempft haben.
 	
-	gold_handler.post(new Runnable() { @Override public void run() { 
+	platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
 	
 		
 		//loeschen von eigener Einheit - nur Bild
-	rl.removeView(myUnits.images.peekFirst());
+	rl.removeView(findViewById(myUnits.images.peekFirst()));
 	myUnits.images.removeFirst();
 	
 	// enden der Kampfanimation des Gegners
-	AnimationDrawable ad = (AnimationDrawable) enemyUnits.images.peekFirst().getBackground();
-	ad.stop();
-	enemyUnits.images.peekFirst().setBackgroundResource(R.drawable.anim_stickman_walking_g);
-	ad = (AnimationDrawable) enemyUnits.images.peekFirst().getBackground();
-	ad.start();
+	ImageView iv_firstEnemy = (ImageView) findViewById(enemyUnits.images.peekFirst());
+	iv_firstEnemy.getAnimation().cancel();
+	iv_firstEnemy.setBackgroundResource(R.drawable.anim_stickman_walking_g);
 	}}) ;
 	
 	//Position des feindlichen Soldaten
 	int x = enemyUnits.firstx();
 	final AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(STDPOSWIDTH, STDPOSHEIGHT, x, STDPOSY);
-	gold_handler.post(new Runnable() { @Override public void run() { 
+	platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
 		//zurueckposten des Bildes vom feindlichen Soldaten
-		enemyUnits.images.peekFirst().setLayoutParams(lp);
+		ImageView iv_firstEnemy = (ImageView) findViewById(enemyUnits.images.peekFirst());
+		iv_firstEnemy.setLayoutParams(lp);
 		//bewegen des Bildes
-		enemyUnits.images.peekFirst().setAnimation(AnimationUtils.loadAnimation(returnContext(), R.anim.horizontal_translate_g));
-		enemyUnits.images.peekFirst().getAnimation().start();
+		iv_firstEnemy.setAnimation(AnimationUtils.loadAnimation(returnContext(), R.anim.horizontal_translate_g));
+		iv_firstEnemy.getAnimation().start();
 	}}) ;
 	//setzen der Zustandbooleans fuer den wieder laufenden feindlichen Soldaten
+	enemyUnits.setWorkpos((int) 0);
 	enemyUnits.aendernZuLaufenStart(enemyUnits.getDelPos());
 	//loeschen des eigenen Soldaten aus der Warteschlange / FIFO Stack
 	myUnits.deleteFirst(); // boolean gibt zurueck ob es funktioniert hat
@@ -582,14 +576,14 @@ private void toeteeigen_und_weiterlaufen() { // oberer Teil wie toetegegner_und_
 private void toetegegner_und_weiterlaufen() {
 	aktuellesguthaben += 100; // Goldbonus fuer das toeten von gegnerischen Soldaten
 	
-	gold_handler.post(new Runnable() { @Override public void run() { 
-	rl.removeView(enemyUnits.images.peekFirst());
+	platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
+	rl.removeView(findViewById(enemyUnits.images.peekFirst()));
 	enemyUnits.images.removeFirst();
-	AnimationDrawable ad = (AnimationDrawable) myUnits.images.peekFirst().getBackground();
-	ad.stop();  
-	myUnits.images.peekFirst().setBackgroundResource(R.drawable.anim_stickman_walking);
-	ad = (AnimationDrawable) myUnits.images.peekFirst().getBackground();
-	ad.start();  
+	enemyUnits.deleteFirst();
+	
+	ImageView iv_myUnit = (ImageView) findViewById(myUnits.images.peekFirst());
+	iv_myUnit.getAnimation().cancel();
+	iv_myUnit.setBackgroundResource(R.drawable.anim_stickman_walking);
 	}}) ;
 	
 	
@@ -599,18 +593,21 @@ private void toetegegner_und_weiterlaufen() {
 	// Die Layoutparameter sind die Standardwerte in den Feldern auch oben angegeben.
 	// Minh Notiz: Die hardgecodeten Layoutparameter habe ich hardgecoded gelassen.
 	final AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(50, 50, x ,300);
-	gold_handler.post(new Runnable() { @Override public void run() { 
-	myUnits.images.peekFirst().setLayoutParams(lp);
+	platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
+		ImageView iv_myUnit = (ImageView) findViewById(myUnits.images.peekFirst());
+		iv_myUnit.setLayoutParams(lp);
 	}}) ;
+	myUnits.setWorkpos((int) 0);
 	myUnits.aendernZuLaufenStart(myUnits.getDelPos());
-	gold_handler.post(new Runnable() { @Override public void run() { 
-		myUnits.images.peekFirst().setAnimation(AnimationUtils.loadAnimation(returnContext(), R.anim.horizontal_translate));
-		myUnits.images.peekFirst().getAnimation().start(); } } );
+	platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
+		ImageView iv_myUnit = (ImageView) findViewById(myUnits.images.peekFirst());
+		iv_myUnit.setAnimation(AnimationUtils.loadAnimation(returnContext(), R.anim.horizontal_translate));
+		iv_myUnit.getAnimation().start(); } } );
 }
 
 
 
-public void autoErstellenNachChar ( char c) { // selbstaendiges erstellen von Einheiten (Bot)
+public void autoErstellenNachint ( int c) { // selbstaendiges erstellen von Einheiten (Bot)
 	// bei jedem 'a' wird ein feindlicher Soldat erstellt
 	switch (c) {
 	case 'a':
@@ -626,22 +623,24 @@ public void autoErstellenNachChar ( char c) { // selbstaendiges erstellen von Ei
 // nachfrage = 1 nur eine eigene Einheit
 // nachfrage = 2 Einheit von beiden da
 // nachfrage = 3 nur eine feindliche Einheit
-private char nachfrage() {
-	char returnchar = 0;
+
+
+private int nachfrage() {
+	int returnint = 0;
 	// beschriebene Werte werden zu != null
 	//	beschrieben sind Faelle au\sser der default wenn keine Einheit gespawnt ist
 	if (myUnits.getAnzahl() > 0 || enemyUnits.getAnzahl() > 0) {
 		if ( myUnits.getAnzahl() > 0 && enemyUnits.getAnzahl() > 0 ) { 
-			returnchar = 2;
+			returnint = 2;
 		}
 		if ( myUnits.getAnzahl() > 0 && enemyUnits.getAnzahl() < 1) {
-			returnchar = 1;
+			returnint = 1;
 		}
 		if ( myUnits.getAnzahl() < 1 && enemyUnits.getAnzahl() > 0 ) {
-			returnchar = 3;
+			returnint = 3;
 		} 
-	} else returnchar = 0;
-	return returnchar;
+	} else returnint = 0;
+	return returnint;
 }
 
   

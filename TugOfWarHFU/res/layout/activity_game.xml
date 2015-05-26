@@ -14,7 +14,25 @@
         android:layout_x="0dp"
         android:layout_y="-100dp"
         android:src="@drawable/hintergrund_final" />
+	
+	<TextView
+        android:id="@+id/LebenRot"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_x="12dp"
+        android:layout_y="63dp"
+        android:text="TextView"
+        android:textColor="@color/red" />
 
+    <TextView
+        android:id="@+id/LebenBlau"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_x="540dp"
+        android:layout_y="63dp"
+        android:text="TextView"
+        android:textColor="@color/blue" />
+    
     <ImageButton
         android:id="@+id/imageButtonSoldat"
         android:layout_width="wrap_content"

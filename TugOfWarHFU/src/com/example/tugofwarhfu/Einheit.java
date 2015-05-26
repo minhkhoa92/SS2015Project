@@ -1,13 +1,10 @@
 package com.example.tugofwarhfu;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
 //import android.util.Log;
 
 public class Einheit {
 	private final int ARTSOLDAT = 1;
-	private static final int DELAYTOSPEED = 1000;
+
 	public static final int XSTARTMYUNIT = 0;
 	public static final int XSTARTENEMY = 1000;
 	public int xx;
@@ -19,7 +16,6 @@ public class Einheit {
 
 	private int einheitart;
 	private boolean enemy;
-	private boolean kaempft = false;
 	
 	public Einheit(boolean isenemy, int kategorie){
 		xx = 0;
@@ -42,23 +38,14 @@ public class Einheit {
 		xx = 0;
 		if (enemy) xx = 1000;
 	}
-	
-	public void startwalktimer() {
-		new Timer().scheduleAtFixedRate(new TimerAddX(), 0, DELAYTOSPEED);
-	}
-
 
 	public void setamlaufen(boolean einheitistamlaufen) {
 		this.laeuft = einheitistamlaufen;
 //		Log.w("test", "und geht");
 	}
 
-	public boolean isamlaufen() {
+	public boolean amLaufen() {
 		return laeuft;
-	}
-
-	public void setKaempfen(boolean kaempfen) {
-		this.kaempft = kaempfen;
 	}
 
 	public int getXx() {
@@ -77,17 +64,15 @@ public class Einheit {
 		return schaden;
 	}
 
+	public void laufe() {
+		if (amLaufen() && hp > 0) {
+			if (isEnemy()) xx -= 100 ;
+			else if (!isEnemy()) xx += 100;
+			}
+		}
+	
 	public void bekommtschaden(int angerichteterschaden){
 		hp -= angerichteterschaden;
 	}
-
-	class TimerAddX extends TimerTask { // gibt den X wert des eigenen Stickmans an
 	
-	public void run() {
-		  if(isamlaufen()){
-			  if (isEnemy()) xx -= 100 ;
-			  if (!isEnemy()) xx += 100;
-		  	}
-		}
-	}
 }

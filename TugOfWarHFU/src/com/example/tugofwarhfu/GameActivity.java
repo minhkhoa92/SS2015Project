@@ -575,7 +575,7 @@ private void toeteEinheit(final boolean isEnemy) {
 	if ( isEnemy ) {
 		aktuellesguthaben += 100;
 		enemyUnits.deleteFirst();
-	} else if ( !isEnemy ) {myUnits.deleteFirst();  }// boolean gibt zurueck ob es funktioniert hat
+	} else if ( !isEnemy ) {myUnits.deleteFirst();  }
 	
 	//Daten umsetzen fuer das Laufen
 	setzeUmFuerDasLaufen();

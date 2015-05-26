@@ -65,9 +65,8 @@ public class EinheitFiFoStack {
 		} else {return false;}
 	}
 	
-	protected boolean deleteFirst() {
-		if ( ( ( ein1.getHp() > 0 && (int) calcCount() == 0 )  || (int) calcCount() > 0) ) { //bei 5 gefuellten items sind inspos und delpos auf der gleichen Stelle x, x - x ergibt count = 0
-			switch (delPos) {
+	protected void deleteFirst() {
+		switch (delPos) {
 			case 0:
 				ein1.setamlaufen(false);
 				ein1.resetX();
@@ -91,10 +90,8 @@ public class EinheitFiFoStack {
 			default:
 				break;
 			}
-			delPos++;
-			delPos = (int) (delPos % 5);
-			return true;
-		} else {return false;}
+		delPos++;
+		delPos = (int) (delPos % 5);
 	}
 	
 	private int calcCount(){

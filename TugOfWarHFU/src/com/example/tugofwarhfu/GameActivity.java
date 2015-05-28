@@ -55,10 +55,6 @@ public class GameActivity extends Activity {
 	MediaPlayer sound_schwert1;
 	MediaPlayer sound_schwert2;
 	MediaPlayer sound_soldat_erstellt;
-	String mess1;
-	String mess2;
-	String mess3;
-	String fullMess;
 	int tick;
 	OnCompletionListener on1 = new OnCompletionListener() {
 		@Override
@@ -345,7 +341,6 @@ public class GameActivity extends Activity {
 	public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
 	{
 		popUpMessages("Tut nichts.");
-		erstelleSoldat(true);
 	}
 	
 	private void stillStehen(final boolean isEnemy, final int indexOfPic, final int xPos, final int einheitArt) {

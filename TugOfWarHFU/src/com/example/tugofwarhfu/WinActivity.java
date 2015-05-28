@@ -24,7 +24,7 @@ public class WinActivity extends Activity{
 	}
 	
 	public void gotoMenu(View v){
-		Intent intent = new Intent (this,MenueActivity.class);
+		Intent intent = new Intent (this,MenuActivity.class);
 		startActivity(intent);
 		finish();
 		

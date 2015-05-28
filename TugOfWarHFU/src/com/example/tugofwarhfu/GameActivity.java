@@ -7,9 +7,10 @@ import java.util.Random;
 import java.lang.Thread;
 
 import android.app.Activity;
+import android.media.MediaPlayer;
+import android.media.MediaPlayer.OnCompletionListener;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.View;
 import android.widget.AbsoluteLayout;
 import android.widget.ImageButton;
@@ -26,54 +27,101 @@ import android.view.animation.AnimationUtils;
 public class GameActivity extends Activity {
 
 	// Konstanten Minh
-	private static final int DELAYTOSPEED = 500;
-	private final int ARTSOLDAT = 1;
-	private final int ABSTANDZWEISOLDATEN = 130;
-	public static final int GRENZEFEINDLICHEBASIS = 820;
-	public static final int GRENZEMEINEBASE = 60;
-	public static final int ABSTANDZWEIEINHEITEN = 275;
-	final int STDPOSWIDTH = 100;
-	final int STDPOSHEIGHT = 150;
-	final int STDPOSY = 450;
+	private static final int DELAYTOSPEED = 125;
+	public static final int ARTKRIEGER = 2;
+	public static final int ARTSOLDAT = 1;
+	public static final int ABSTANDZWEISOLDATEN = 80;
+	public static final int GRENZEFEINDLICHEBASIS = 900;
+	public static final int GRENZEMEINEBASE = 90;
+	public static final int ABSTANDZWEIEINHEITEN = 200;
+	private static final int STDPOSWIDTH = 100;
+	private static final int STDPOSHEIGHT = 150;
+	private static final int STDPOSY = 450;
+	private static final int ticksPerSecond = 1000 / DELAYTOSPEED;
 	
 	// Variablen Minh
 	EinheitFiFoStack myUnits;// Einheiten
 	EinheitFiFoStack enemyUnits;
 	boolean soldatbuttonactive = true;
-	int baseown;
-	int baseene;
+	int baseOwn = 1000;
+	int baseEnemy = 1000;
 	private int stringpos = 0;
 	AbsoluteLayout rl;
 	protected Random rand;
 	Handler platzierenDerEinheiten;
+	Handler handlerMessage = new Handler();
 	Timer updateTimer;
+	MediaPlayer music;
+	MediaPlayer sound_schwert1;
+	MediaPlayer sound_schwert2;
+	MediaPlayer sound_soldat_erstellt;
+	String mess1;
+	String mess2;
+	String mess3;
+	String fullMess;
+	int tick;
+	OnCompletionListener on1 = new OnCompletionListener() {
+		@Override
+		public void onCompletion(MediaPlayer mp) {
+			mp.stop();
+			mp.release();
+			sound_schwert1 = MediaPlayer.create(returnContext(), R.raw.sword_one);
+			sound_schwert1.setLooping(false);
+			sound_schwert1.setVolume(0.15f, 0.15f);
+			sound_schwert1.setOnCompletionListener(on1);
+		}
+	};
+	OnCompletionListener on2 = new OnCompletionListener() {
+		@Override
+		public void onCompletion(MediaPlayer mp) {
+			mp.stop();
+			mp.release();
+			sound_schwert2 = MediaPlayer.create(returnContext(), R.raw.steelsword);
+			sound_schwert2.setLooping(false);
+			sound_schwert2.setVolume(0.10f, 0.10f);
+			sound_schwert2.setOnCompletionListener(on2);
+		}
+	};
+	
 	
 	//Variablen von ALex
 	
 
-TextView sekunden_anzeige;
-TextView goldstand;
-int aktuellesguthaben=100;
-boolean running=true;
-Handler gold_handler;
+	TextView sekunden_anzeige;
+	TextView goldstand;
+	int aktuellesguthaben=100;
+	boolean running=true;
+	Handler gold_handler;
 
 
 //Variable von Alex Ende
 	
-TextView leben_rot;
-TextView leben_blau;
+	TextView leben_rot;
+	TextView leben_blau;
 	        
 	@Override
 	public void onCreate(Bundle savedInstanceState) { // passiert wenn die Activity erstellt wird
-	    super.onCreate(savedInstanceState);
+		music = MediaPlayer.create(this, R.raw.stacy_s_trumpet);
+		music.setLooping(true);
+		int maxVolume = 1000000;
+		double currentVolume = 0.5; // 1.5 stacy's trumpet
+		float floatVolume = (float) (Math.log(currentVolume + 1)/Math.log(maxVolume + 1));
+		if (music!=null && !music.isPlaying()) {
+			try {
+				music.start();
+				music.setVolume(floatVolume, floatVolume);
+			} catch (IllegalStateException e) {
+				e.printStackTrace();
+			}
+		}
+		super.onCreate(savedInstanceState);
 	    setContentView(R.layout.activity_game);
 	    rl = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame);
 	    leben_rot =(TextView) findViewById(R.id.LebenRot);
 	    leben_blau =(TextView) findViewById(R.id.LebenBlau);
-		baseown = 1000;
-		baseene = 1000;
-	    leben_rot.setText(Integer.toString(baseown));
-	    leben_blau.setText(Integer.toString(baseene));
+	    leben_rot.setText(Integer.toString(baseOwn));
+	    leben_blau.setText(Integer.toString(baseEnemy));
+	    tick = 0;
 		   
 			    //Goldschleife von Alex
 			    goldstand=(TextView) findViewById(R.id.gold_anzeige);
@@ -111,7 +159,7 @@ TextView leben_blau;
 					@Override public void run() {
 						// bot, autoerstellen
 						// bei jedem 'a' wird ein feindlicher Soldat erstellt
-						autoErstellenNachint(getString(R.string.einheiten_erstellen).charAt(stringpos)); stringpos++; 
+						autoErstellenNachInt(getString(R.string.einheiten_erstellen).charAt(stringpos)); stringpos++; 
 						} };
 				new Timer().schedule(timertask, 5000, 2000);
 				
@@ -126,11 +174,12 @@ TextView leben_blau;
 				// nachfrage = 1 nur eine eigene Einheit
 				// nachfrage = 2 Einheit von beiden da
 				// nachfrage = 3 nur eine feindliche Einheit
-				if ((int)nachfrage() > 0) aktualisiereSpiel();
+				tick++;
+				if ((int)nachfrage() > 0 && baseEnemy > 0 && baseOwn > 0) aktualisiereSpiel();
 				
 				} };
 				updateTimer = new Timer();
-				updateTimer.schedule(timernUeberpruefen, 4000, DELAYTOSPEED);
+				updateTimer.schedule(timernUeberpruefen, 200, DELAYTOSPEED);
 	    }
 	
 	protected void onStart(){ //passiert wenn die Activity gestartet wird
@@ -138,108 +187,321 @@ TextView leben_blau;
 //		Log.d("Start","Act.Start");
 		myUnits = new EinheitFiFoStack(false);
 		enemyUnits = new EinheitFiFoStack(true);
+		initSounds();
 	}
 	
-	
+	private void initSounds() {
+		sound_schwert1 = MediaPlayer.create(this, R.raw.sword_one);
+		sound_schwert2 = MediaPlayer.create(this, R.raw.steelsword);
+		sound_soldat_erstellt = MediaPlayer.create(this, R.raw.unit_trips);
+		sound_schwert1.setLooping(false);
+		sound_schwert2.setLooping(false);
+		sound_soldat_erstellt.setLooping(false);
+		sound_schwert1.setVolume(0.15f, 0.15f);
+		sound_schwert2.setVolume(0.10f, 0.10f);
+		sound_soldat_erstellt.setVolume(0.07f, 0.07f);
+		sound_schwert1.setOnCompletionListener(on1); sound_schwert2.setOnCompletionListener(on2);
+	}
 	
 	@Override
 	protected void onPause() {
+		music.stop();
+		music.release();
 		super.onPause();
-		rl.removeAllViews();
 		updateTimer.cancel();
+		rl.removeAllViews();
 		finish(); // keine Ahnung ob das den hoeheren Anforderungen entspricht 
 		//finish() sorgt fuer keine Ueberbleibsel wenn die GameActivity von anderen Activities ueberlagert wird
 	}
 	
-
-	private void erstelleSoldat(boolean isenemy) {
-		final AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams
-				(STDPOSWIDTH, STDPOSHEIGHT, Einheit.XSTARTMYUNIT, STDPOSY);
-		if (!isenemy){
+	// erstellung eines neuen ImageViews für jeden Knopfdruck
+	private void erstelleSoldat(boolean isEnemy) {
+		if (!isEnemy){
 			platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
 				ImageView neuerSoldat = new ImageView(returnContext());	
 				neuerSoldat.setImageResource(R.drawable.anim_stickman_walking);
 				int id = View.generateViewId();
 				neuerSoldat.setId(id);
-				// erstellung eines neuen ImageViews für jeden Knopfdruck
-				rl.addView(neuerSoldat, lp);
+				rl.addView(neuerSoldat, erstelleAbsoluteLayoutParamSoldat(Einheit.XSTARTMYUNIT));
 				myUnits.images.addLast(id);
-				gebelaufanim(id);
+				gebeLaufAnim(id);
 			}}) ;
-			myUnits.addnewsoldat();
-		} else if (isenemy && enemyUnits.getAnzahl() < 5){
-			enemyUnits.addnewsoldat();
+			myUnits.addNewSoldat();
+		} else if (isEnemy && enemyUnits.getAnzahl() < 5){
+			if ( sound_soldat_erstellt.isPlaying() ) { 
+				sound_soldat_erstellt.pause();
+				sound_soldat_erstellt.seekTo(0);
+			}
+			if ( !sound_soldat_erstellt.isPlaying()) sound_soldat_erstellt.start();
+			enemyUnits.addNewSoldat();
 			platzierenDerEinheiten.post(new Runnable() { @Override public void run() {
-				AbsoluteLayout.LayoutParams lpNew = new AbsoluteLayout.LayoutParams
-						(STDPOSWIDTH, STDPOSHEIGHT, Einheit.XSTARTENEMY, STDPOSY);
 				ImageView neuerSoldat = new ImageView(returnContext());	
 				neuerSoldat.setImageResource(R.drawable.anim_stickman_walking_g);
 				int id = View.generateViewId();
 				neuerSoldat.setId(id);
 				enemyUnits.images.addLast(id);
-				rl.addView(neuerSoldat, lpNew);
-				gebelaufanim_g(id);
+				rl.addView(neuerSoldat, erstelleAbsoluteLayoutParamSoldat(Einheit.XSTARTENEMY));
+				gebeLaufAnim_g(id);
 			} } ) ;
 		}
-
+		
+		
+	}
+	
+	private void erstelleKrieger(boolean isenemy) {
+		if (!isenemy){
+			platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
+				ImageView neuerKrieger = new ImageView(returnContext());	
+				neuerKrieger.setImageResource(R.drawable.anim_stickwarrior);
+				int id = View.generateViewId();
+				neuerKrieger.setId(id);
+				// erstellung eines neuen ImageViews für jeden Knopfdruck
+				rl.addView(neuerKrieger, erstelleAbsoluteLayoutParamWarrior(Einheit.XSTARTMYUNIT));
+				myUnits.images.addLast(id);
+				gebeLaufAnim(id);
+			}}) ;
+			myUnits.addNewKrieger();
+		} else if (isenemy && enemyUnits.getAnzahl() < 5){
+			if ( sound_soldat_erstellt.isPlaying() ) { 
+				sound_soldat_erstellt.pause();
+				sound_soldat_erstellt.seekTo(0);
+			}
+			if ( !sound_soldat_erstellt.isPlaying()) sound_soldat_erstellt.start();
+			enemyUnits.addNewKrieger();
+			platzierenDerEinheiten.post(new Runnable() { @Override public void run() {
+				ImageView neuerSoldat = new ImageView(returnContext());	
+				neuerSoldat.setImageResource(R.drawable.anim_stickwarrior_g);
+				int id = View.generateViewId();
+				neuerSoldat.setId(id);
+				enemyUnits.images.addLast(id);
+				rl.addView(neuerSoldat, erstelleAbsoluteLayoutParamWarrior(Einheit.XSTARTENEMY));
+				gebeLaufAnim_g(id);
+			} } ) ;
+		}
+		
 	}
 
-	
-	private void gebelaufanim(int id) {
+	private void gebeLaufAnim(int id) {
 		Animation ta = AnimationUtils.loadAnimation(returnContext(), R.anim.horizontal_translate);
 		ImageView iv_eigenSold = (ImageView) findViewById(id);
+		iv_eigenSold.setAnimation(null);
 		iv_eigenSold.setAnimation(ta); // das neue image view wird sichtbar gemacht und ihm wird die animation zugewiesen
-		iv_eigenSold.getAnimation().start();
+		ta.start();
 	}
 
-	private void gebelaufanim_g(int id) {
+	private void gebeLaufAnim_g(int id) {
 		Animation ta = AnimationUtils.loadAnimation(returnContext(), R.anim.horizontal_translate_g);
-		ImageView feindSold = (ImageView) findViewById(id);
-		feindSold.setAnimation(ta);
-		feindSold.getAnimation().start();
+		ImageView iv_feindSold = (ImageView) findViewById(id);
+		iv_feindSold.setAnimation(null);
+		iv_feindSold.setAnimation(ta);
+		ta.start();
 	}
-	 
+
+
+        
+	public void SpawnSoldat(View Buttonsoldat) //onClick Funktion, spawn Soldaten
+	{
+	//	Log.d("Soldat", "Soldat wird gespawnt!");
+		ImageButton thisimagebutton = (ImageButton) findViewById(R.id.imageButtonSoldat);
+		
+		if((aktuellesguthaben>=20) && soldatbuttonactive && myUnits.getAnzahl() < 5)
+		{	
+			if ( sound_soldat_erstellt.isPlaying() ) { 
+				sound_soldat_erstellt.pause();
+				sound_soldat_erstellt.seekTo(0);
+			}
+			if ( !sound_soldat_erstellt.isPlaying()) sound_soldat_erstellt.start();
+			thisimagebutton.setClickable(false);
+			soldatbuttonactive = false;  //3 sec nicht wieder aktivierbar
+			int cooldowntime = 3000 ;
+			new Cooldown(cooldowntime, ARTSOLDAT);
+			aktuellesguthaben=aktuellesguthaben-20;	//zaehler ist der Goldwert, der Soldat kostet gerade 20 Gold
+			erstelleSoldat(false);
+		} else if (myUnits.getAnzahl() == 5 ){ popUpMessages("Limit ist bei 5."); }
+	}
+
+	public void SpawnKrieger(View v) //onClick Funktion, spawnt Krieger -> Dieser Knopf lässt gerade den gegnerischen Stickman sterben und lässt unseren an der Stelle weiterlaufen. wo er zuletzt gekämpft hat
+	{
+	ImageButton thisimagebutton = (ImageButton) findViewById(R.id.imageButtonKrieger);
+		
+		if((aktuellesguthaben>=50) && myUnits.getAnzahl() < 5)
+		{	
+			if ( sound_soldat_erstellt.isPlaying() ) { // anderer Sound?
+				sound_soldat_erstellt.pause();
+				sound_soldat_erstellt.seekTo(0);
+			}
+			if ( !sound_soldat_erstellt.isPlaying()) sound_soldat_erstellt.start();
+			thisimagebutton.setClickable(false);
+			int cooldowntime = 6000 ;
+			new Cooldown(cooldowntime, ARTKRIEGER);
+			aktuellesguthaben=aktuellesguthaben-50;	//zaehler ist der Goldwert, der Soldat kostet gerade 20 Gold
+			erstelleKrieger(false);
+		} else if (myUnits.getAnzahl() == 5 ){ popUpMessages("Limit ist bei 5."); }
+	//	Log.d("kek","methode wird aufgerufen");
+	}
+
+
+
+	public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
+	{
+		popUpMessages("Tut nichts.");
+		erstelleSoldat(true);
+	}
+	
+	private void stillStehen(final boolean isEnemy, final int indexOfPic, final int xPos, final int einheitArt) {
+		
+		platzierenDerEinheiten.post(new Runnable() {
+			@Override
+			public void run() {
+				ImageView iv = null;
+				if (isEnemy){
+					iv = (ImageView) findViewById(enemyUnits.images.get(indexOfPic));
+					if ( einheitArt == ARTSOLDAT ) {
+						iv.setImageResource(R.drawable.stickman3_g);
+						iv.setLayoutParams(erstelleAbsoluteLayoutParamSoldat(xPos));
+					} else if ( einheitArt == ARTKRIEGER) {
+						iv.setImageResource(R.drawable.stickman2_1_g);
+						iv.setLayoutParams(erstelleAbsoluteLayoutParamWarrior(xPos));
+					}
+					iv.setAnimation(null);
+					iv.invalidate();
+				}
+				else if (!isEnemy) {
+					iv = (ImageView) findViewById(myUnits.images.get(indexOfPic));
+					if ( einheitArt == ARTSOLDAT ) {
+						iv.setImageResource(R.drawable.stickman3);
+						iv.setLayoutParams(erstelleAbsoluteLayoutParamSoldat(xPos));
+					}
+					else if ( einheitArt == ARTKRIEGER) {
+						iv.setImageResource(R.drawable.stickman2_1);
+						iv.setLayoutParams(erstelleAbsoluteLayoutParamWarrior(xPos));
+					}
+					iv.setAnimation(null);
+					iv.invalidate();
+				}
+			}
+			
+			
+		});
+		
+	}
+
+	private void aktualisiereSpiel() { // hitboxerkennung und Kampferkennung timerstart
+		if ( myUnits.getAnzahl() > 0 ) { 
+			myUnits.teamEinSchrittVor();
+		}
+		if ( enemyUnits.getAnzahl() > 0 ) { 
+			enemyUnits.teamEinSchrittVor();
+		}
+			
+				
+	//				 nachfrage = 1 nur eine eigene Einheit
+	//				 nachfrage = 2 Einheit von beiden da
+	//				 nachfrage = 3 nur eine feindliche Einheit
+		if (nachfrage() == 2) { //wenn eine eigene Einheit und eine Gegner Einheit gespawnt sind
+	//		Log.d("Hitboxen","Hitboxen werden aufgerufen");
+			if((enemyUnits.firstX() - myUnits.firstX()) <= ABSTANDZWEISOLDATEN) // HITBOXEN! Einheit-X-Wert und Gegner-X-Wert
+			{ 
+				if (enemyUnits.getFirstData().amLaufen()) {
+					enemyUnits.aendernZuKaempfen(enemyUnits.getDelPos());
+						startKaempfen_g();
+				}
+				if ( myUnits.getFirstData().amLaufen()) {
+					myUnits.aendernZuKaempfen(myUnits.getDelPos());
+					startKaempfen();
+				}
+				if ( ( tick % ticksPerSecond ) < 1) {
+					if (!sound_schwert1.isPlaying() && !sound_schwert2.isPlaying()) {
+						sound_schwert2.start();
+						sound_schwert2.setNextMediaPlayer(sound_schwert1);
+					}
+					callDmgEinheit(enemyUnits.getFirstData());
+					callDmgEinheit(myUnits.getFirstData());
+					// aufraeumen von toten Soldaten (Einheiten)
+					obEinheitTotIst();
+					if ( myUnits.images.size() > 1 && myUnits.isTeamAmKaempfen() ) {
+						stoppWennNoetig(false);
+					}
+					if ( enemyUnits.images.size() > 1 && enemyUnits.isTeamAmKaempfen() ) {
+						stoppWennNoetig(true);
+					}
+				}
+			}
+		}
+		
+		if (nachfrage() == 1) { //wenn nur eine eigene Einheit gespawnt ist
+			if(myUnits.firstX() >= GRENZEFEINDLICHEBASIS) {//HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
+				if (tick % ticksPerSecond < 1) {
+					callDmgBase(false);
+					if (!sound_schwert1.isPlaying()) sound_schwert1.start();
+				}
+				if ( myUnits.images.size() > 1) {
+					if (baseEnemy > 0)
+						stoppWennNoetig(false);
+				}
+				if(myUnits.getFirstData().amLaufen()) {
+					myUnits.setWorkpos((int) 0);
+					myUnits.aendernZuKaempfen(myUnits.getDelPos());
+					startKaempfen();
+				}
+			}
+		}
+		
+		if (nachfrage() == 3) {
+			//wenn nur eine gegnerische  Einheit gespawnt ist
+			if(enemyUnits.firstX() <= GRENZEMEINEBASE) {//HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
+				if (tick % ticksPerSecond < 1) {
+					callDmgBase(true);
+					if (!sound_schwert1.isPlaying()) sound_schwert1.start();
+				}
+				if ( enemyUnits.images.size() > 1) {
+					if (baseOwn > 0)
+						stoppWennNoetig(true);
+				}
+				if (enemyUnits.getFirstData().amLaufen()) {
+					enemyUnits.setWorkpos((int) 0);
+					enemyUnits.aendernZuKaempfen(enemyUnits.getDelPos());
+					startKaempfen_g();
+				}
+			}
+		}
+	}
+
 	private void startKaempfen() {
 		
-//	setzt den x-wert, wo die Animation abgespielt werden soll
-		int x = 0;
-		x = myUnits.firstx();
-		// hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
-		final AbsoluteLayout.LayoutParams lp2 = new AbsoluteLayout.LayoutParams(
-				STDPOSWIDTH, 
-				STDPOSHEIGHT,
-				x,
-				STDPOSY); //in welcher Hoehe neu ein ImageView gespawnt wird
-		platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
-//			bringt die erste Einheit in den index
-			ImageView iv = (ImageView) findViewById(myUnits.images.peekFirst());
-			iv.setLayoutParams(lp2);
-//			gibt der Einheit eine neue Frame by Frame Animation
-		
+//		setzt den x-wert, wo die Animation abgespielt werden soll
+			final int x = myUnits.firstX();
+			// hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
+			//in welcher Hoehe neu ein ImageView gespawnt wird
+			platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
+//				bringt die erste Einheit in den index
+				ImageView iv = (ImageView) findViewById(myUnits.images.peekFirst());
+				if (myUnits.getFirstData().getEinheitart() == ARTSOLDAT)
+					iv.setLayoutParams(erstelleAbsoluteLayoutParamSoldat(x));
+				if (myUnits.getFirstData().getEinheitart() == ARTKRIEGER)
+					iv.setLayoutParams(erstelleAbsoluteLayoutParamWarrior(x));
+//				gibt der Einheit eine neue Frame by Frame Animation
 			
-		AnimationDrawable ad = (AnimationDrawable) iv.getDrawable();
-		if (ad.isRunning()) ad.stop();
-		
-		iv.getAnimation().cancel();
-		iv.setAnimation(null);
-		iv.setImageResource(R.drawable.anim_stickman_kampf);
-		ad = (AnimationDrawable) iv.getDrawable();
-		if (!ad.isRunning()) ad.start();
-		}}) ;
-	}
-		
-
+				
+				AnimationDrawable ad = (AnimationDrawable) iv.getDrawable();
+				if (ad.isRunning()) ad.stop();
+			
+				iv.getAnimation().cancel();
+				iv.setAnimation(null);
+				if (myUnits.getFirstData().getEinheitart() == ARTSOLDAT)
+					iv.setImageResource(R.drawable.anim_stickman_kampf);
+				if (myUnits.getFirstData().getEinheitart() == ARTKRIEGER)
+					iv.setImageResource(R.drawable.anim_stickwarrior_kampf);
+				ad = (AnimationDrawable) iv.getDrawable();
+				if (!ad.isRunning()) ad.start();
+			}}) ;
+		}
 	
 	private void startKaempfen_g() {
-//		Log.d("Kampf","Es wird gekämpft");
 		
-		int x = enemyUnits.firstx(); // hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
+		final int x = enemyUnits.firstX(); // hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
 
-		final AbsoluteLayout.LayoutParams lp2 = new AbsoluteLayout.LayoutParams(
-		STDPOSWIDTH, 
-		STDPOSHEIGHT,
-		x,
-		STDPOSY);
+		
 		platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
 			ImageView iv = (ImageView) findViewById(enemyUnits.images.peekFirst());
 			AnimationDrawable ad = (AnimationDrawable) iv.getDrawable();
@@ -247,471 +509,363 @@ TextView leben_blau;
 			
 			iv.getAnimation().cancel();
 			iv.setAnimation(null);
-			iv.setImageResource(R.drawable.anim_stickman_kampf_g);
+			if (enemyUnits.getFirstData().getEinheitart() == ARTSOLDAT) {
+				iv.setImageResource(R.drawable.anim_stickman_kampf_g);
+				iv.setLayoutParams(erstelleAbsoluteLayoutParamSoldat(x));
+				}
+			else if (enemyUnits.getFirstData().getEinheitart() == ARTKRIEGER) {
+				iv.setImageResource(R.drawable.anim_stickman_kampf_g);
+				iv.setLayoutParams(erstelleAbsoluteLayoutParamWarrior(x)); 
+				}
 			if ( !ad.isRunning() ) ad.start();
-			iv.setLayoutParams(lp2);
+			
 		}}) ;
 	}
 	
-	private Context returnContext() {
-		return this;
-	}
-	
-        
-public void SpawnSoldat(View Buttonsoldat) //onClick Funktion, spawn Soldaten
-{
-	Log.d("Soldat", "Soldat wird gespawnt!");
-	ImageButton thisimagebutton = (ImageButton) findViewById(R.id.imageButtonSoldat);
-	
-	if((aktuellesguthaben>=20) && soldatbuttonactive && myUnits.getAnzahl() < 5)
-	{	
-		thisimagebutton.setClickable(false);
-		soldatbuttonactive = false;  //3 sec nicht wieder aktivierbar
-		int cooldowntime = 3000 ;
-		new Cooldown(cooldowntime, ARTSOLDAT);
-		aktuellesguthaben=aktuellesguthaben-20;	//zaehler ist der Goldwert, der Soldat kostet gerade 20 Gold
-		erstelleSoldat(false);
-	} else if (myUnits.getAnzahl() == 5 ){ popUpMessages("Limit ist bei 5."); }
-}
-
-public void SpawnKrieger(View v) //onClick Funktion, spawnt Krieger -> Dieser Knopf lässt gerade den gegnerischen Stickman sterben und lässt unseren an der Stelle weiterlaufen. wo er zuletzt gekämpft hat
-{
-	
-//	Log.d("kek","methode wird aufgerufen");
-	popUpMessages("Tut nichts.");
-//	stillStehen(true, enemyUnits.images.peekFirst(), enemyUnits.firstx());
-	
-}
-public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
-{
-	popUpMessages("Tut nichts.");
-//	erstelleSoldat(true);
-}
-
-private void stillStehen(final boolean isEnemy, int id, final int xPos) {
-	final ImageView iv = (ImageView) findViewById(id);
-	platzierenDerEinheiten.post(new Runnable() {
-		@Override
-		public void run() {
-			iv.getAnimation().cancel();
-			iv.setAnimation(null);
-			iv.setLayoutParams(new AbsoluteLayout.LayoutParams(STDPOSWIDTH, STDPOSHEIGHT, xPos, STDPOSY));
-			if (!isEnemy)
-				iv.setImageResource(R.drawable.stickman3);
-			else if (isEnemy)
-				iv.setImageResource(R.drawable.stickman3_g);
-		}
-	});
-	
-}
-
-private void aktualisiereSpiel() { // hitboxerkennung und Kampferkennung timerstart
-
-	if ( myUnits.getAnzahl() > 0 ) { 
-		myUnits.teamEinSchrittVor();
-		int i = 1;
-		while (i < 5){
-			if (!myUnits.getDataFromPos( ( myUnits.getDelPos() + i ) % 5 ).amLaufen() &&
-					myUnits.getDataFromPos( ( myUnits.getDelPos() + i ) % 5 ).getHp() > 0)
-				stillStehen(false, myUnits.images.get(i), myUnits.getDataFromPos( ( myUnits.getDelPos() + i ) % 5 ).getXx());
-			i++;
-		}
-	}
-	if ( enemyUnits.getAnzahl() > 0 ) { 
-		enemyUnits.teamEinSchrittVor();
-		int i = 1;
-		while (i < 5){
-			if (!enemyUnits.getDataFromPos( ( enemyUnits.getDelPos() + i ) % 5 ).amLaufen() &&
-					enemyUnits.getDataFromPos( ( enemyUnits.getDelPos() + i ) % 5 ).getHp() > 0)
-				stillStehen(true, enemyUnits.images.get(i), enemyUnits.getDataFromPos( ( enemyUnits.getDelPos() + i ) % 5 ).getXx());
-			i++;
-		}
-	}
-		
-			
-//				 nachfrage = 1 nur eine eigene Einheit
-//				 nachfrage = 2 Einheit von beiden da
-//				 nachfrage = 3 nur eine feindliche Einheit
-	int c = nachfrage();
-	switch (c) {
-		case 2: { //wenn eine eigene Einheit und eine Gegner Einheit gespawnt sind
-	//		Log.d("Hitboxen","Hitboxen werden aufgerufen");
-			if(( myUnits.firstx() - enemyUnits.firstx() ) >= ABSTANDZWEISOLDATEN) // HITBOXEN! Einheit-X-Wert und Gegner-X-Wert
-			{ 
-				callDmgEinheit(enemyUnits.getFirstData()); // TODO test ob der Schaden nur in eine Richtung laeuft
-				callDmgEinheit(myUnits.getFirstData());
-				if ( myUnits.getFirstData().amLaufen()) {
-					myUnits.setWorkpos((int) 0);
-					myUnits.aendernZuKaempfenStart(myUnits.getDelPos()); // Laufen
-					try {
-						startKaempfen();
-						}
-					catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-	
-				if (enemyUnits.getFirstData().amLaufen()) {
-					try {
-						enemyUnits.setWorkpos((int) 0);
-						enemyUnits.aendernZuKaempfenStart(enemyUnits.getDelPos());
-						startKaempfen_g();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
+	private void stoppWennNoetig(boolean isEnemy) {
+		int first_unit_x = enemyUnits.firstX(), delPos = enemyUnits.getDelPos();
+		if ( !isEnemy ) {
+			first_unit_x = myUnits.firstX(); delPos = myUnits.getDelPos();
+			int i;
+			for (i = 1 ; i < myUnits.images.size(); i++ ) {
+				if ( first_unit_x - myUnits.getDataFromPos( (delPos + i) % 5 ).getXx() <= 
+						ABSTANDZWEIEINHEITEN * i) {
+					int j = (delPos + i) % 5;
+					myUnits.aendernZuHalten(j);
+					int einheitArt = myUnits.getDataFromPos( (delPos + i) % 5 ).getEinheitart();
+					stillStehen(isEnemy, i, myUnits.getDataFromPos( (delPos + i) % 5 ).getXx(), einheitArt);
 				}
 			}
-			break;
-		}
-	
-		case 1: { //wenn nur eine eigene Einheit gespawnt ist
-
-			if(myUnits.firstx() >= GRENZEFEINDLICHEBASIS) {//HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
-				callDmgBase(false);
-				if(myUnits.getFirstData().amLaufen()) {
-//					Log.d("Kampf","Einheit läuft gegen die basis");
-					try {
-						myUnits.setWorkpos((int) 0);
-						myUnits.aendernZuKaempfenStart(myUnits.getDelPos());
-						startKaempfen();
-					} catch (Exception e) {
-						e.printStackTrace();	
-					}
+		} else if (isEnemy) { 
+			int k;
+			for (k = 1 ; k < enemyUnits.images.size(); k++ ) {
+				if ( enemyUnits.getDataFromPos( (delPos + k) % 5 ).getXx() - first_unit_x <= 
+						ABSTANDZWEIEINHEITEN * k ) {
+					int l = (delPos + k) % 5;
+					enemyUnits.aendernZuHalten(l);
+					int einheitArt = enemyUnits.getDataFromPos( (delPos + l) % 5 ).getEinheitart();
+					stillStehen(isEnemy, k, enemyUnits.getDataFromPos( (delPos + l) % 5 ).getXx(), einheitArt);
 				}
 			}
-			break;
 		}
-	
-		case 3: {
-			
-		//wenn nur eine gegnerische  Einheit gespawnt ist
-//					final boolean k = feindeinheit.isamlaufen();
-//					gold_handler.post(new Runnable() {@Override public void run() { goldstand.setText(Boolean.toString(k));} });
-			if(enemyUnits.firstx() <= GRENZEMEINEBASE) {//HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
-				callDmgBase(true);
-				if (enemyUnits.getFirstData().amLaufen()) {
-//					Log.d("Kampf","GegnerEinheit läuft gegen die basis"); 
-					try {
-						enemyUnits.setWorkpos((int) 0);
-						enemyUnits.aendernZuKaempfenStart(enemyUnits.getDelPos());
-						startKaempfen_g();
-					}
-					catch (Exception e) {
-						e.printStackTrace();
-					}
+	}
+
+	private void callDmgBase(boolean isEnemy) {
+		rand = new Random();
+		if (isEnemy) { 
+			baseOwn -= ( enemyUnits.getFirstData().getSchaden() + rand.nextInt(5) );
+		    platzierenDerEinheiten.post(new Runnable() {
+				@Override
+				public void run() {
+					leben_rot.setText(Integer.toString(baseOwn));
 				}
-			}
-			break;
+			});
+		} else { 
+			baseEnemy -= ( myUnits.getFirstData().getSchaden() + rand.nextInt(5) ); 
+			platzierenDerEinheiten.post(new Runnable() {
+				@Override
+				public void run() {
+					leben_blau.setText(Integer.toString(baseEnemy));
+				}
+			});
+		}
+		schauNachObBasisTotIst();
+	}
+
+	private void schauNachObBasisTotIst() {
+		if (baseEnemy < 1) {
+			spielGewinnen();
+		}
+		if (baseOwn < 1) {
+			spielVerlieren();
 		}
 	}
-}
 
-
-
-private void callDmgBase(boolean isEnemy) {
-	rand = new Random();
-	if (isEnemy) { 
-		baseown -= ( enemyUnits.getFirstData().getSchaden() + rand.nextInt(5) );
-	    platzierenDerEinheiten.post(new Runnable() {
-			@Override
-			public void run() {
-				leben_rot.setText(Integer.toString(baseown));
-			}
-		});
-	} else { 
-		baseene -= ( myUnits.getFirstData().getSchaden() + rand.nextInt(5) ); 
-		platzierenDerEinheiten.post(new Runnable() {
-			@Override
-			public void run() {
-				leben_blau.setText(Integer.toString(baseene));
-			}
-		});
+	public void spielVerlieren(){ //muss nachher in eine If bedingung in einen Timer rein, die z.B. alles halbe sekunde checkt, ob eine Base zerstört ist
+		finish();
+		Intent intent = new Intent (this, LoseActivity.class);
+		startActivity(intent);
 	}
-	schauNachObBasisTotIst();
-}
-
-private void callDmgEinheit(Einheit angreifer) {
-	rand = new Random();
-	if (angreifer.isEnemy()) 
-	myUnits.firstBekommtSchaden(angreifer.getSchaden() + rand.nextInt(5));
-	else if (!angreifer.isEnemy()) enemyUnits.firstBekommtSchaden(angreifer.getSchaden() + rand.nextInt(5));
-	// aufraeumen von toten Soldaten (Einheiten)
-	obEinheitTotIst();
-}
 	
-//	TimerTask timetask = new TimerTask() { //falls hitboxenerkennung dann kampfanimation von eigenen Einheiten
-//		
-//		public void run() { //hier wird die Kampfanimation abgespielt
-//			if(soebenKollision ==true && kampfanimtest ==false)
-//			{
-//				
-//				runOnUiThread(new Runnable() { //über runOnUiThread() kann man auf die Imageviews aus dem Mainthread zu greifen
-//						@Override
-//						public void run(){
-//				
-//						Einheit einheita = null;
-//						int i = 0;
-//						while (einheita == null && i < allunits.size()) {
-//							if (allunits.get(i).isEnemy() == false)
-//								einheita = allunits.get(i);
-//
-//							i++;
-//						}
-//						int index = allunits.indexOf(einheita);
-//				
-//						animationlaufzukampf(index);
-//				
-//				
-//						@SuppressWarnings("deprecation")
-//						AbsoluteLayout al = (AbsoluteLayout) findViewById(R.id.AbsoluteLayoutGame);
-//						int x = 0;
-//						Einheit eineeigeneEinhe = null;
-//						i = 0;
-//						while (eineeigeneEinhe == null && i < allunits.size()) {
-//							if (!allunits.get(i).isEnemy()) {
-//								eineeigeneEinhe = allunits.get(i);
-//								x = eineeigeneEinhe.getXx();
-//							}
-//
-//							i++;
-//						}// hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
-//				
-//						@SuppressWarnings("deprecation")
-//						AbsoluteLayout.LayoutParams lp2 = new AbsoluteLayout.LayoutParams(
-//								s_walk_animation.getHeight(), 
-//								+s_walk_animation.getWidth(),
-//								x,
-//								+s_walk_animation.getTop()); //in welcher Hoehe neu ein ImageView gespawnt wird
-//						
-//						al.addView(einheitbilder.get(index), lp2);
-//				
-//						}
-//				});
-//				kampfanimtest=true; //hier wird mitgeteilt, dass die Einheit aktuell kämpft ( wenn also die Einheit nachher einen Gegner tötet, wird diese Variable wieder false
-//			}
-//		};
-//	};
-//	Timer t1 = new Timer();
-//	t1.schedule(timetask, 0, 100); //es wird alle zehntel sekunde gecheckt, ob die hitbox etwas getroffen hat
-
-
-
+	public void spielGewinnen(){ //muss nachher in eine If bedingung in einen Timer rein, die z.B. alles halbe sekunde checkt, ob eine Base zerstört ist
+		baseEnemy = -100;
+		finish();
+		Intent intent = new Intent (this, WinActivity.class);
+		startActivity(intent);
+	}
+	
+	private void callDmgEinheit(Einheit angreifer) {
+		rand = new Random();
+		if (angreifer.isEnemy()) 
+		myUnits.firstBekommtSchaden(angreifer.getSchaden() + rand.nextInt(5));
+		else if (!angreifer.isEnemy()) enemyUnits.firstBekommtSchaden(angreifer.getSchaden() + rand.nextInt(5));	
+	}
 
 //Diese Funktion ueberprueft, ob eine Einheit keine hp hat. Bei keinen hp kann sie die bisher
 //	bestehende Funktion gegner toeten aufrufen.
-private void obEinheitTotIst() {
-	if ( enemyUnits.firstSchauObTot() && enemyUnits.getAnzahl() > 0 ){
-		toeteEinheit(true);
-	} else if ( myUnits.firstSchauObTot() && myUnits.getAnzahl() > 0 ) {
+	private void obEinheitTotIst() {
+		
+		if ( enemyUnits.firstSchauObTot() && enemyUnits.getAnzahl() > 0 ){
+			toeteEinheit();
+		}
+		
+		if ( myUnits.firstSchauObTot() && myUnits.getAnzahl() > 0 ) {
 		//einheit toeten, innerhalb der Methode wird weiterlaufen aufgerufen
-		toeteEinheit(false);
-	}
-}
-
-private void schauNachObBasisTotIst() {
-	if (baseene < 1) {
-		spielGewinnen();
-	}
-	if (baseown < 1) {
-		spielVerlieren();
-	}
-}
-
-public void spielVerlieren(){ //muss nachher in eine If bedingung in einen Timer rein, die z.B. alles halbe sekunde checkt, ob eine Base zerstört ist
-	finish();
-	Intent intent = new Intent (this, LoseActivity.class);
-	startActivity(intent);
-}
-
-public void spielGewinnen(){ //muss nachher in eine If bedingung in einen Timer rein, die z.B. alles halbe sekunde checkt, ob eine Base zerstört ist
-	finish();
-	Intent intent = new Intent (this, WinActivity.class);
-	startActivity(intent);
-}
-
-
-private void weiterlaufen(boolean isEnemy, int pos, int count){
-	//Position des feindlichen Soldaten
-	final int ipos = count;
-	if (isEnemy) {
-		
-		int x = enemyUnits.getDataFromPos(pos).getXx();
-		if (enemyUnits.getDataFromPos(pos).amLaufen()) 
-		{ final AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(STDPOSWIDTH, STDPOSHEIGHT, x, STDPOSY);
-		platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
-			//zurueckposten des Bildes vom feindlichen Soldaten
-			ImageView iv_Enemy = (ImageView) findViewById(enemyUnits.images.get(ipos));
-			AnimationDrawable ad = (AnimationDrawable) iv_Enemy.getDrawable();
-			if (ad.isRunning()) ad.stop();
-			iv_Enemy.setImageResource(R.drawable.anim_stickman_walking_g);
-			ad = (AnimationDrawable) iv_Enemy.getDrawable();
-			ad.start();
-			iv_Enemy.setLayoutParams(lp);
-			gebelaufanim_g(enemyUnits.images.get(ipos)); } } );
+			toeteEinheit();
 		}
 	}
-	if (!isEnemy) {
-		int x = myUnits.getDataFromPos(pos).getXx();
-		if (myUnits.getDataFromPos(pos).amLaufen()) 
-		{ final AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(STDPOSWIDTH, STDPOSHEIGHT, x, STDPOSY);
-		platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
-			//zurueckposten des Bildes vom feindlichen Soldaten
-			ImageView iv_myUnit = (ImageView) findViewById(myUnits.images.get(ipos));
-			AnimationDrawable ad = (AnimationDrawable) iv_myUnit.getDrawable();
-			if (ad.isRunning()) ad.stop();
-			iv_myUnit.setImageResource(R.drawable.anim_stickman_walking);
-			ad = (AnimationDrawable) iv_myUnit.getDrawable();
-			ad.start();
-			iv_myUnit.setLayoutParams(lp); 
-			gebelaufanim(myUnits.images.get(ipos)); } } );
-		}
-	}
-	if ( ( isEnemy && count + 1 < enemyUnits.getAnzahl() ) || 
-			( !isEnemy && count + 1 < myUnits.getAnzahl() )) {
-		count++;
-		weiterlaufen(isEnemy, (pos + 1) % 5, count);
-	}
-			//bewegen des Bildes
-		
-	// enden der Kampfanimation des Gegners
-}
 
-private void toeteEinheit(final boolean isEnemy) { 
-	platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
-		//loeschen von eigener Einheit - nur Bild
-		ImageView iv = null;
-		if (isEnemy) {iv = (ImageView) findViewById(enemyUnits.images.peekFirst()); }
-		else if (!isEnemy) { iv = (ImageView) findViewById(myUnits.images.peekFirst());} 
-			iv.setVisibility(View.GONE);
-			iv.setImageResource(0);
-			rl.removeView(iv);
-			if (isEnemy) {
-				enemyUnits.images.removeFirst();
-			} else if ( !isEnemy ) {
-				myUnits.images.removeFirst();
+	private void toeteEinheit() { 
+		int id = 0;
+		if (enemyUnits.images.size() > 0 && enemyUnits.firstSchauObTot()) {
+			if ( enemyUnits.getFirstData().getEinheitart() == ARTSOLDAT ) {
+				aktuellesguthaben += 30;}
+			else if ( enemyUnits.getFirstData().getEinheitart() == ARTKRIEGER ){
+				aktuellesguthaben += 65;}
+			enemyUnits.deleteFirst();
+			id = enemyUnits.images.peekFirst();
+			final int savedId = id;
+			enemyUnits.images.removeFirst();
+			platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
+				//loeschen von eigener Einheit - nur Bild
+				ImageView iv = null;
+				iv = (ImageView) findViewById(savedId);
+				iv.setVisibility(View.GONE);
+				iv.invalidate();
+				iv.setImageResource(0);
+				rl.removeView(iv);
+				enemyUnits.setTeamAmKaempfen(false);
+				if ( myUnits.firstX() > GRENZEFEINDLICHEBASIS ) {
+					myUnits.setTeamAmKaempfen(false);
+				}
+				if ( myUnits.images.size() > 0 && !myUnits.isTeamAmKaempfen() ) {
+					laufenIfNoetig(false);
+				}
+				if ( enemyUnits.images.size() > 0 && !enemyUnits.isTeamAmKaempfen() ) {
+					laufenIfNoetig(true);
+				}
+			}}) ;
+		} 
+		if (myUnits.images.size() > 0 && myUnits.firstSchauObTot() ) {
+			myUnits.deleteFirst();
+			id = myUnits.images.peekFirst();
+			myUnits.images.removeFirst();
+			final int savedId = id;
+			platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
+				//loeschen von eigener Einheit - nur Bild
+				ImageView iv = null;
+				iv = (ImageView) findViewById(savedId);
+				iv.setVisibility(View.GONE);
+				iv.invalidate();
+				iv.setImageResource(0);
+				rl.removeView(iv);
+				myUnits.setTeamAmKaempfen(false);
+				if (enemyUnits.images.size() < 1) {
+					enemyUnits.setTeamAmKaempfen(false);
+				}
+				if (enemyUnits.firstX() > GRENZEMEINEBASE) {
+					enemyUnits.setTeamAmKaempfen(false);
+				}
+				if ( myUnits.images.size() > 0 && !myUnits.isTeamAmKaempfen() ) {
+					laufenIfNoetig(false);
+				}
+				if ( enemyUnits.images.size() > 0 && !enemyUnits.isTeamAmKaempfen() ) {
+					laufenIfNoetig(true);
+				}
+			}}) ;
+		}
+		//loeschen der Soldaten aus der Warteschlange / FIFO Stack
+	}
+	
+	private void laufenIfNoetig(boolean isEnemy) {
+		if (isEnemy) {
+			int i, einheitDataPos, size = enemyUnits.images.size();
+			for ( i = 0 ; i < size ; i++ ) {
+				einheitDataPos = ( enemyUnits.getDelPos() + i ) % 5 ;
+				enemyUnits.aendernZuLaufen(einheitDataPos);
+				weiterlaufen(isEnemy, i, einheitDataPos);
 			}
-	}}) ;
-	
-	//loeschen der Soldaten aus der Warteschlange / FIFO Stack
-	if ( isEnemy ) {
-		aktuellesguthaben += 100;
-		enemyUnits.deleteFirst();
-	} else if ( !isEnemy ) {myUnits.deleteFirst();  }
-	
-	//Daten umsetzen fuer das Laufen
-	setzeUmFuerDasLaufen();
-}
+		} else if (!isEnemy) {
+			int i, einheitDataPos, size = myUnits.images.size();
+			for ( i = 0 ; i < size ; i++ ) {
+				einheitDataPos = ( myUnits.getDelPos() + i ) % 5 ;
+				myUnits.aendernZuLaufen(einheitDataPos);
+				weiterlaufen(isEnemy, i, einheitDataPos);
+			}
+		}
+	}
 
-private void setzeUmFuerDasLaufen() {
-	enemyUnits.setWorkpos((int) 0);
-	myUnits.setWorkpos((int) 0);
-	if ( enemyUnits.getAnzahl() > 0 ) {
-		enemyUnits.aendernZuLaufenStart(enemyUnits.getDelPos());
+	private void weiterlaufen(boolean isEnemy, final int picIndex, final int einheitDataPos){
+		//Position des feindlichen Soldaten
+		if (isEnemy) {
+			final int x = enemyUnits.getDataFromPos(einheitDataPos).getXx();
+			platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
+				int pictureId = enemyUnits.images.get(picIndex);
+				//zurueckposten des Bildes vom feindlichen Soldaten
+				ImageView iv_Enemy = (ImageView) findViewById(pictureId);
+				if (enemyUnits.getDataFromPos(einheitDataPos).getEinheitart() == ARTSOLDAT) {
+					iv_Enemy.setImageResource(R.drawable.anim_stickman_walking_g);
+					iv_Enemy.setLayoutParams(erstelleAbsoluteLayoutParamSoldat(x));
+				}
+				else if (enemyUnits.getDataFromPos(einheitDataPos).getEinheitart() == ARTKRIEGER) {
+					iv_Enemy.setImageResource(R.drawable.anim_stickwarrior_g);
+					iv_Enemy.setLayoutParams(erstelleAbsoluteLayoutParamWarrior(x));
+				}
+				iv_Enemy.invalidate();
+				gebeLaufAnim_g(pictureId); 
+			} } );
+		}
+		
+		if (!isEnemy) {
+			final int x = myUnits.getDataFromPos(einheitDataPos).getXx();
+			
+			platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
+				int pictureId = myUnits.images.get(picIndex);
+				//zurueckposten des Bildes vom feindlichen Soldaten
+				ImageView iv_myUnit = (ImageView) findViewById(pictureId);
+				if (myUnits.getDataFromPos(einheitDataPos).getEinheitart() == ARTSOLDAT)
+					iv_myUnit.setImageResource(R.drawable.anim_stickman_walking);
+				else if (myUnits.getDataFromPos(einheitDataPos).getEinheitart() == ARTKRIEGER)
+					iv_myUnit.setImageResource(R.drawable.anim_stickwarrior);
+	
+				if (myUnits.getDataFromPos(einheitDataPos).getEinheitart() == ARTSOLDAT)
+					iv_myUnit.setLayoutParams(erstelleAbsoluteLayoutParamSoldat(x)); 
+				else if (myUnits.getDataFromPos(einheitDataPos).getEinheitart() == ARTKRIEGER)
+					iv_myUnit.setLayoutParams(erstelleAbsoluteLayoutParamWarrior(x)); 
+				gebeLaufAnim(pictureId); } } );
+		}
+				//bewegen des Bildes
+		// enden der Kampfanimation des Gegners
 	}
-	if (myUnits.getAnzahl() > 0) {
-		myUnits.aendernZuLaufenStart(enemyUnits.getDelPos());
+
+
+	private void autoErstellenNachInt ( int c) { // selbstaendiges erstellen von Einheiten (Bot)
+		// bei jedem 'a' wird ein feindlicher Soldat erstellt
+		switch (c) {
+		case 'a':
+			erstelleSoldat(true);
+			break;
+		case 'b':
+			erstelleKrieger(true);
+			break;
+		case 's':
+			spielGewinnen();
+			break;
+		case 'u':
+			popUpMessages("Wow! Na gut, dann siege.");
+			break;
+		case 'v':
+			popUpMessages("gewinnst du!");
+			break;
+		case 'w':
+			popUpMessages("ueberlebst,");
+			break;
+		case 'x':
+			popUpMessages("Okay, wenn du das");
+			break;
+//		case 'y':
+//			popUpMessages("Protip: Press buttons.");;
+//			break;
+//		case 'z':
+//			popUpMessages("Start! Have fun!");
+//			break;
+		default:
+			break;
+		}
 	}
 	
-	//setzen der Zustandbooleans fuer die wieder laufenden Soldaten
-	enemyUnits.setWorkpos((int) 0);
-	myUnits.setWorkpos((int) 0);
-	if (myUnits.getAnzahl() > 0) {
-		weiterlaufen(false, myUnits.getDelPos(), 0);
-	}
-	if ( enemyUnits.getAnzahl() > 0 ) {
-		weiterlaufen(true, enemyUnits.getDelPos(), 0);
-	}
-	
-}
-
-public void autoErstellenNachint ( int c) { // selbstaendiges erstellen von Einheiten (Bot)
-	// bei jedem 'a' wird ein feindlicher Soldat erstellt
-	switch (c) {
-	case 'a':
-		erstelleSoldat(true);
-		break;
-	default:
-		break;
-	}
-}
-
 //Ueberpruefen von welchem Team Einheiten stehen
 // nachfrage = 0 keine Einheit
 // nachfrage = 1 nur eine eigene Einheit
 // nachfrage = 2 Einheit von beiden da
 // nachfrage = 3 nur eine feindliche Einheit
+	private int nachfrage() {
+		int returnint = 0;
+		// beschriebene Werte werden zu != null
+		//	beschrieben sind Faelle au\sser der default wenn keine Einheit gespawnt ist
+		if (myUnits.getAnzahl() > 0 || enemyUnits.getAnzahl() > 0) {
+			if ( myUnits.getAnzahl() > 0 && enemyUnits.getAnzahl() > 0 ) { 
+				returnint = 2;
+			}
+			if ( myUnits.getAnzahl() > 0 && enemyUnits.getAnzahl() < 1) {
+				returnint = 1;
+			}
+			if ( myUnits.getAnzahl() < 1 && enemyUnits.getAnzahl() > 0 ) {
+				returnint = 3;
+			} 
+		} else returnint = 0;
+		return returnint;
+	}
 
-
-private int nachfrage() {
-	int returnint = 0;
-	// beschriebene Werte werden zu != null
-	//	beschrieben sind Faelle au\sser der default wenn keine Einheit gespawnt ist
-	if (myUnits.getAnzahl() > 0 || enemyUnits.getAnzahl() > 0) {
-		if ( myUnits.getAnzahl() > 0 && enemyUnits.getAnzahl() > 0 ) { 
-			returnint = 2;
-		}
-		if ( myUnits.getAnzahl() > 0 && enemyUnits.getAnzahl() < 1) {
-			returnint = 1;
-		}
-		if ( myUnits.getAnzahl() < 1 && enemyUnits.getAnzahl() > 0 ) {
-			returnint = 3;
-		} 
-	} else returnint = 0;
-	return returnint;
-}
-
-  private void popUpMessages (final String message) {
-	  new Handler().post(new Runnable() {
-		
-		@Override
-		public void run() {
-			TextView txt = (TextView) findViewById(R.id.messages);
-			txt.setText(message);
-			txt.setVisibility(View.VISIBLE);
-			txt.setAnimation(null);
-		}
-	});
-	  final Animation anim = AnimationUtils.loadAnimation(returnContext(), R.anim.fade_two_sec);
-	  new Handler().postDelayed((new Runnable() {
-			
+	private void popUpMessages (final String message) {
+		handlerMessage.post(new Runnable() {
 			@Override
 			public void run() {
 				TextView txt = (TextView) findViewById(R.id.messages);
+				txt.setText(message);
+				txt.setVisibility(View.VISIBLE);
+				txt.setAnimation(null);
+			}
+		});
+	  
+		handlerMessage.postDelayed((new Runnable() {
+			@Override
+			public void run() {
+				final Animation anim = AnimationUtils.loadAnimation(returnContext(), R.anim.fade_two_sec);
+				TextView txt = (TextView) findViewById(R.id.messages);
 				if ( txt.getAnimation() == null ) {
-				txt.setAnimation(anim);
-				anim.start();
+					txt.setAnimation(anim);
+					anim.start();
 				}
 				txt.setVisibility(View.INVISIBLE);
-				
-				
 			}
 		}) , 2000);
-  }
+	}
 	
         
     private class Cooldown {
-    	Timer ticktock;
-    	int buttontyp;
-    	public Cooldown (int millisecondstocooldown, int buttonart) {
-    		int end = millisecondstocooldown;
-    		buttontyp = buttonart;
-    		TimerTask activateagain = new TimerTask() {
+    	Timer cooldownTimer;
+    	int buttonTyp;
+    	public Cooldown (int millisecondsToCooldown, int buttonArt) {
+    		int end = millisecondsToCooldown;
+    		buttonTyp = buttonArt;
+    		TimerTask activateUnitButton = new TimerTask() {
     			
     			@Override
     			public void run() {
-    				if (buttontyp == ARTSOLDAT) {
+    				if (buttonTyp == ARTSOLDAT) {
     					soldatbuttonactive = true;
     					ImageView iv = (ImageView) findViewById(R.id.imageButtonSoldat);
+    					iv.setClickable(true);
+    				}
+    				if (buttonTyp == ARTKRIEGER) {
+    					ImageView iv = (ImageView) findViewById(R.id.imageButtonKrieger);
     					iv.setClickable(true);
     				}
     					
     			}
     		};
-    		ticktock = new Timer();
-    		ticktock.schedule(activateagain, end);
+    		cooldownTimer = new Timer();
+    		cooldownTimer.schedule(activateUnitButton, end);
     	}
-    
     }
+    
+    private AbsoluteLayout.LayoutParams erstelleAbsoluteLayoutParamSoldat(int x){
+    	AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(
+    			STDPOSWIDTH, STDPOSHEIGHT, x, STDPOSY);
+    	return lp;
+    }
+    
+    private AbsoluteLayout.LayoutParams erstelleAbsoluteLayoutParamWarrior(int x){
+    	AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams(
+    			STDPOSWIDTH+25, STDPOSHEIGHT+25, x, STDPOSY-25);
+    	return lp;
+    }
+    
+	private Context returnContext() {
+		return this;
+	}
+    
 }
 
 	

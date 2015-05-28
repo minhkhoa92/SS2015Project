@@ -4,7 +4,7 @@ import java.util.LinkedList;
 
 public class EinheitFiFoStack {
 	
-	final int ARTSOLDAT = 1;
+	final int ARTSOLDAT = GameActivity.ARTSOLDAT;
 	private boolean teamAmKaempfen;
 	public LinkedList<Integer> images;
 	public Einheit ein1, ein2, ein3, ein4, ein5;
@@ -33,27 +33,59 @@ public class EinheitFiFoStack {
 	*/
 	
 	//erstellt neuen Soldaten, wenn die Soldatenanzahl nicht die maximale Soldatenanzahlgrenze erreicht hat
-	protected boolean addnewsoldat(){
+	protected boolean addNewSoldat(){
 		if ( ! (ein1.getHp() > 0 && (int) calcCount() < 1 ) ) { //bei 5 gefuellten items sind inspos und delpos auf der gleichen Stelle x, x - x ergibt count = 0
 			switch (insPos) {
 			case 0:
-				ein1.soldatWerte();
+				ein1.einheitWerte(GameActivity.ARTSOLDAT);
 				ein1.setamlaufen(true);
 				break;
 			case 1:
-				ein2.soldatWerte();
+				ein2.einheitWerte(GameActivity.ARTSOLDAT);
 				ein2.setamlaufen(true);
 				break;
 			case 2:
-				ein3.soldatWerte();
+				ein3.einheitWerte(GameActivity.ARTSOLDAT);
 				ein3.setamlaufen(true);
 				break;
 			case 3:
-				ein4.soldatWerte();
+				ein4.einheitWerte(GameActivity.ARTSOLDAT);
 				ein4.setamlaufen(true);
 				break;
 			case 4:
-				ein5.soldatWerte();
+				ein5.einheitWerte(GameActivity.ARTSOLDAT);
+				ein5.setamlaufen(true);
+				break;
+			default:
+				break;
+			}
+			insPos++;
+			insPos = (int) (insPos % 5);
+			return true;
+		} else {return false;}
+	}
+	
+	protected boolean addNewKrieger(){
+		if ( ! (ein1.getHp() > 0 && (int) calcCount() < 1 ) ) { //bei 5 gefuellten items sind inspos und delpos auf der gleichen Stelle x, x - x ergibt count = 0
+			switch (insPos) {
+			case 0:
+				ein1.einheitWerte(GameActivity.ARTKRIEGER);
+				ein1.setamlaufen(true);
+				break;
+			case 1:
+				ein2.einheitWerte(GameActivity.ARTKRIEGER);
+				ein2.setamlaufen(true);
+				break;
+			case 2:
+				ein3.einheitWerte(GameActivity.ARTKRIEGER);
+				ein3.setamlaufen(true);
+				break;
+			case 3:
+				ein4.einheitWerte(GameActivity.ARTKRIEGER);
+				ein4.setamlaufen(true);
+				break;
+			case 4:
+				ein5.einheitWerte(GameActivity.ARTKRIEGER);
 				ein5.setamlaufen(true);
 				break;
 			default:
@@ -145,11 +177,11 @@ public class EinheitFiFoStack {
 		}
 	}
 
-	public int firstx () {
+	public int firstX () {
 		return getFirstData().getXx();
 	}
 	
-	public int firstdmg () {
+	public int firstDmg () {
 		return getFirstData().getSchaden();
 	}
 	
@@ -177,26 +209,21 @@ public class EinheitFiFoStack {
 		if ( !teamAmKaempfen ) {
 			ein1.laufe(); ein2.laufe(); ein3.laufe(); ein4.laufe(); ein5.laufe();
 		} else if ( teamAmKaempfen ) {
-			int saveWorkPos = workPos;
-			workPos = 100;
-			int checkPos = delPos + 1;
-			if ( ( total( getDataFromPos(delPos).getXx() - getDataFromPos( ( checkPos ) % 5 ).getXx() ) <= GameActivity.ABSTANDZWEIEINHEITEN ) 
-					&& ( getDataFromPos( ( checkPos ) % 5 ).getHp() > 0 ) )
-				aendernZuKaempfenStart(( checkPos ) % 5);
-			checkPos++;
-			while ( checkPos - delPos < 5) {
-				if ( ( total( getDataFromPos( ( checkPos - 1 ) % 5 ).getXx() - getDataFromPos( ( checkPos ) % 5 ).getXx() ) <= GameActivity.ABSTANDZWEIEINHEITEN ) 
-						&& ( getDataFromPos( (checkPos ) % 5 ).getHp() > 0 ) )
-					aendernZuKaempfenStart((checkPos ) % 5);
-			checkPos++;
-			}
-			workPos = saveWorkPos;
+			if ( ein1.amLaufen() ) ein1.laufe();
+			if ( ein2.amLaufen() ) ein2.laufe();
+			if ( ein3.amLaufen() ) ein3.laufe();
+			if ( ein4.amLaufen() ) ein4.laufe();
+			if ( ein5.amLaufen() ) ein5.laufe();
 		}
 		
 	}
 	
-	public void aendernZuKaempfenStart(int c) {
+	public void aendernZuKaempfen(int c) {
 		teamAmKaempfen = true;
+		aendernZuHalten(c);
+	}
+	
+	public void aendernZuHalten(int c) {
 		switch (c) {
 		case 0:
 			ein1.setamlaufen(false);
@@ -214,18 +241,6 @@ public class EinheitFiFoStack {
 			ein5.setamlaufen(false);
 			break;
 		}
-		if (getAnzahl() >= workPos) {
-			int oldPos = workPos;
-			workPos ++;
-			int newPos = (int) ((delPos + workPos) % 5);
-			if ( total( getDataFromPos(oldPos).getXx() - getDataFromPos(newPos).getXx() ) <= GameActivity.ABSTANDZWEIEINHEITEN )
-				aendernZuKaempfenStart(newPos);
-		}
-	}
-	
-	private int total(int i) {
-		if (i < 0 ) i*= -1;
-		return i;
 	}
 	
 	protected Einheit getDataFromPos(int c) {
@@ -245,50 +260,25 @@ public class EinheitFiFoStack {
 		}
 	}
 	
-	public void aendernZuLaufenStart(int c) { // TODO kaempfen einbringen
+	public void aendernZuLaufen(int c) {
+		teamAmKaempfen = false;
 		switch (c) {
 		case 0:
-			if ( (isEnemy && ein1.getXx() > GameActivity.GRENZEMEINEBASE) ||
-					( !isEnemy && ein1.getXx() < GameActivity.GRENZEFEINDLICHEBASIS) ) { 
-				ein1.setamlaufen(true);
-				if (workPos == 0) { teamAmKaempfen = false;}
-			}
+			ein1.setamlaufen(true);
 			break;
 		case 1:
-			if ( (isEnemy && ein2.getXx() > GameActivity.GRENZEMEINEBASE) ||
-					( !isEnemy && ein2.getXx() < GameActivity.GRENZEFEINDLICHEBASIS) ) { 
-				ein2.setamlaufen(true);
-				if (workPos == 0) { teamAmKaempfen = false;}
-			}
+			ein2.setamlaufen(true);
+			
 			break;
 		case 2:
-			if ( (isEnemy && ein3.getXx() > GameActivity.GRENZEMEINEBASE) ||
-					( !isEnemy && ein3.getXx() < GameActivity.GRENZEFEINDLICHEBASIS) ) { 
-				ein3.setamlaufen(true);
-				if (workPos == 0) { teamAmKaempfen = false;}
-			}
+			ein3.setamlaufen(true);
 			break;
 		case 3:
-			if ( (isEnemy && ein4.getXx() > GameActivity.GRENZEMEINEBASE) ||
-					( !isEnemy && ein4.getXx() < GameActivity.GRENZEFEINDLICHEBASIS) ) { 
-				ein5.setamlaufen(true);
-				if (workPos == 0) { teamAmKaempfen = false;}
-			}
+			ein4.setamlaufen(true);
 			break;
 		case 4: 
-			if ( (isEnemy && ein5.getXx() > GameActivity.GRENZEMEINEBASE) ||
-					( !isEnemy && ein5.getXx() < GameActivity.GRENZEFEINDLICHEBASIS) ) { 
-				ein5.setamlaufen(true);
-				if (workPos == 0) { teamAmKaempfen = false;}
-			}
+			ein5.setamlaufen(true);
 			break;
-		}
-		if (getAnzahl() >= workPos) {
-			int oldPos = workPos;
-			workPos ++;
-			int newPos = (int) ((delPos + workPos) % 5);
-			if ( total( getDataFromPos(oldPos).getXx() - getDataFromPos(newPos).getXx() ) <= GameActivity.ABSTANDZWEIEINHEITEN )
-				aendernZuKaempfenStart(newPos);
 		}
 	}
 	
@@ -308,6 +298,10 @@ public class EinheitFiFoStack {
 
 	public boolean isTeamAmKaempfen() {
 		return teamAmKaempfen;
+	}
+
+	public void setTeamAmKaempfen(boolean teamAmKaempfen) {
+		this.teamAmKaempfen = teamAmKaempfen;
 	}
 
 	public int getDelPos() {

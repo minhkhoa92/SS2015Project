@@ -3,9 +3,10 @@ package com.example.tugofwarhfu;
 //import android.util.Log;
 
 public class Einheit {
-	private final int ARTSOLDAT = 1;
+	private final int ARTSOLDAT = GameActivity.ARTSOLDAT;
+	private final int ARTKRIEGER = GameActivity.ARTKRIEGER;
 
-	public static final int XSTARTMYUNIT = 0;
+	public static final int XSTARTMYUNIT = 0; // eig -10 wie hier geschrieben, zur Neusetzung der imageviews ist die 10 Differenz besser
 	public static final int XSTARTENEMY = 1000;
 	public int xx;
 	
@@ -18,8 +19,8 @@ public class Einheit {
 	private boolean enemy;
 	
 	public Einheit(boolean isenemy, int kategorie){
-		xx = 0;
-		if (isenemy) xx = 1000;
+		xx = -10;
+		if (isenemy) xx = XSTARTENEMY;
 		enemy = isenemy;
 		einheitart = kategorie;
 		if (einheitart == ARTSOLDAT) {
@@ -28,15 +29,19 @@ public class Einheit {
 		}
 	}
 
-	public void soldatWerte (){
+	public void einheitWerte (int kategorie){
+		einheitart = kategorie;
 		schaden = 5;
 		hp = 100;
-		einheitart = ARTSOLDAT;
+		if (einheitart == ARTKRIEGER) {
+			schaden = 4;
+			hp = 500;
+		}
 	}
 
 	public void resetX() {
-		xx = 0;
-		if (enemy) xx = 1000;
+		xx = XSTARTMYUNIT;
+		if (enemy) xx = XSTARTENEMY;
 	}
 
 	public void setamlaufen(boolean einheitistamlaufen) {
@@ -64,10 +69,14 @@ public class Einheit {
 		return schaden;
 	}
 
+	public int getEinheitart() {
+		return einheitart;
+	}
+
 	public void laufe() {
 		if (amLaufen() && hp > 0) {
-			if (isEnemy()) xx -= 25 ;
-			else if (!isEnemy()) xx += 25;
+			if (isEnemy()) xx -= 14 ;
+			else if (!isEnemy()) xx += 14;
 			}
 		}
 	

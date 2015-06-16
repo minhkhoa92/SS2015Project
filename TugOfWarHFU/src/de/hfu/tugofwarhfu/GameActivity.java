@@ -9,7 +9,6 @@ import java.lang.Thread;
 import de.hfu.tugofwarhfu.R;
 import android.app.Activity;
 import android.media.MediaPlayer;
-import android.media.MediaPlayer.OnCompletionListener;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
@@ -57,28 +56,7 @@ public class GameActivity extends Activity {
 	MediaPlayer sound_schwert2;
 	MediaPlayer sound_soldat_erstellt;
 	int tick;
-	OnCompletionListener on1 = new OnCompletionListener() {
-		@Override
-		public void onCompletion(MediaPlayer mp) {
-			mp.stop();
-			mp.release();
-			sound_schwert1 = MediaPlayer.create(returnContext(), R.raw.sword_one);
-			sound_schwert1.setLooping(false);
-			sound_schwert1.setVolume(0.15f, 0.15f);
-			sound_schwert1.setOnCompletionListener(on1);
-		}
-	};
-	OnCompletionListener on2 = new OnCompletionListener() {
-		@Override
-		public void onCompletion(MediaPlayer mp) {
-			mp.stop();
-			mp.release();
-			sound_schwert2 = MediaPlayer.create(returnContext(), R.raw.steelsword);
-			sound_schwert2.setLooping(false);
-			sound_schwert2.setVolume(0.10f, 0.10f);
-			sound_schwert2.setOnCompletionListener(on2);
-		}
-	};
+	
 	
 	
 	//Variablen von ALex
@@ -181,7 +159,6 @@ public class GameActivity extends Activity {
 	
 	protected void onStart(){ //passiert wenn die Activity gestartet wird
 		super.onStart();
-//		Log.d("Start","Act.Start");
 		myUnits = new EinheitFiFoStack(false);
 		enemyUnits = new EinheitFiFoStack(true);
 		initSounds();
@@ -197,7 +174,6 @@ public class GameActivity extends Activity {
 		sound_schwert1.setVolume(0.15f, 0.15f);
 		sound_schwert2.setVolume(0.10f, 0.10f);
 		sound_soldat_erstellt.setVolume(0.07f, 0.07f);
-		sound_schwert1.setOnCompletionListener(on1); sound_schwert2.setOnCompletionListener(on2);
 	}
 	
 	@Override
@@ -207,7 +183,7 @@ public class GameActivity extends Activity {
 		super.onPause();
 		updateTimer.cancel();
 		rl.removeAllViews();
-		finish(); // keine Ahnung ob das den hoeheren Anforderungen entspricht 
+		finish();
 		//finish() sorgt fuer keine Ueberbleibsel wenn die GameActivity von anderen Activities ueberlagert wird
 	}
 	
@@ -406,10 +382,7 @@ public class GameActivity extends Activity {
 					startKaempfen();
 				}
 				if ( ( tick % ticksPerSecond ) < 1) {
-//					if (!sound_schwert1.isPlaying() && !sound_schwert2.isPlaying()) {
-//						sound_schwert2.start();
-//						sound_schwert2.setNextMediaPlayer(sound_schwert1);
-//					}
+					playFightTrack1();
 					callDmgEinheit(enemyUnits.getFirstData());
 					callDmgEinheit(myUnits.getFirstData());
 					// aufraeumen von toten Soldaten (Einheiten)
@@ -428,7 +401,7 @@ public class GameActivity extends Activity {
 			if(myUnits.firstX() >= GRENZEFEINDLICHEBASIS) {//HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
 				if (tick % ticksPerSecond < 1) {
 					callDmgBase(false);
-//					if (!sound_schwert1.isPlaying()) sound_schwert1.start();
+					playFightTrack2();
 				}
 				if ( myUnits.images.size() > 1) {
 					if (baseEnemy > 0)
@@ -447,7 +420,7 @@ public class GameActivity extends Activity {
 			if(enemyUnits.firstX() <= GRENZEMEINEBASE) {//HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
 				if (tick % ticksPerSecond < 1) {
 					callDmgBase(true);
-//					if (!sound_schwert1.isPlaying()) sound_schwert1.start();
+					playFightTrack2();
 				}
 				if ( enemyUnits.images.size() > 1) {
 					if (baseOwn > 0)
@@ -822,6 +795,37 @@ public class GameActivity extends Activity {
 		}) , 2000);
 	}
 	
+	private void playFightTrack1(){
+		if (sound_schwert1!= null && sound_schwert2!= null) {
+			if (!sound_schwert1.isPlaying() && !sound_schwert2.isPlaying()) {
+				try {
+					sound_schwert2.start();
+					new Handler().postDelayed(new Runnable() {
+						
+						@Override
+						public void run() {
+							playFightTrack2();
+							
+						}
+					}, ( sound_schwert2.getDuration() + 10 ) );
+				} catch (IllegalStateException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	private void playFightTrack2(){
+		if (sound_schwert1!=null ) {
+			if (!sound_schwert1.isPlaying()) {
+				try {
+					sound_schwert1.start();
+				} catch (IllegalStateException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
         
     private class Cooldown {
     	Timer cooldownTimer;

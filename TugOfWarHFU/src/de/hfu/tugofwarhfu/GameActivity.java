@@ -242,7 +242,7 @@ public class GameActivity extends Activity {
 			} } ) ;
 		}
 		
-		
+		popUpMessages("Zahl" + Integer.toString(myUnits.getAnzahl()) + "Zahl" + Integer.toString(enemyUnits.getAnzahl()));
 	}
 	
 	private void erstelleKrieger(boolean isenemy) {
@@ -275,7 +275,7 @@ public class GameActivity extends Activity {
 				gebeLaufAnim_g(id);
 			} } ) ;
 		}
-		
+		popUpMessages("Zahl" + Integer.toString(myUnits.getAnzahl()) + "Zahl" + Integer.toString(enemyUnits.getAnzahl()));
 	}
 
 	private void gebeLaufAnim(int id) {
@@ -298,7 +298,6 @@ public class GameActivity extends Activity {
         
 	public void SpawnSoldat(View Buttonsoldat) //onClick Funktion, spawn Soldaten
 	{
-	//	Log.d("Soldat", "Soldat wird gespawnt!");
 		ImageButton thisimagebutton = (ImageButton) findViewById(R.id.imageButtonSoldat);
 		
 		if((aktuellesguthaben>=20) && soldatbuttonactive && myUnits.getAnzahl() < 5)
@@ -407,10 +406,10 @@ public class GameActivity extends Activity {
 					startKaempfen();
 				}
 				if ( ( tick % ticksPerSecond ) < 1) {
-					if (!sound_schwert1.isPlaying() && !sound_schwert2.isPlaying()) {
-						sound_schwert2.start();
-						sound_schwert2.setNextMediaPlayer(sound_schwert1);
-					}
+//					if (!sound_schwert1.isPlaying() && !sound_schwert2.isPlaying()) {
+//						sound_schwert2.start();
+//						sound_schwert2.setNextMediaPlayer(sound_schwert1);
+//					}
 					callDmgEinheit(enemyUnits.getFirstData());
 					callDmgEinheit(myUnits.getFirstData());
 					// aufraeumen von toten Soldaten (Einheiten)
@@ -429,7 +428,7 @@ public class GameActivity extends Activity {
 			if(myUnits.firstX() >= GRENZEFEINDLICHEBASIS) {//HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
 				if (tick % ticksPerSecond < 1) {
 					callDmgBase(false);
-					if (!sound_schwert1.isPlaying()) sound_schwert1.start();
+//					if (!sound_schwert1.isPlaying()) sound_schwert1.start();
 				}
 				if ( myUnits.images.size() > 1) {
 					if (baseEnemy > 0)
@@ -448,7 +447,7 @@ public class GameActivity extends Activity {
 			if(enemyUnits.firstX() <= GRENZEMEINEBASE) {//HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
 				if (tick % ticksPerSecond < 1) {
 					callDmgBase(true);
-					if (!sound_schwert1.isPlaying()) sound_schwert1.start();
+//					if (!sound_schwert1.isPlaying()) sound_schwert1.start();
 				}
 				if ( enemyUnits.images.size() > 1) {
 					if (baseOwn > 0)
@@ -671,6 +670,7 @@ public class GameActivity extends Activity {
 			}}) ;
 		}
 		//loeschen der Soldaten aus der Warteschlange / FIFO Stack
+		popUpMessages("Zahl" + Integer.toString(myUnits.getAnzahl()) + "Zahl" + Integer.toString(enemyUnits.getAnzahl()));
 	}
 	
 	private void laufenIfNoetig(boolean isEnemy) {
@@ -740,9 +740,11 @@ public class GameActivity extends Activity {
 		switch (c) {
 		case 'a':
 			erstelleSoldat(true);
+			popUpMessages("Zahl" + Integer.toString(myUnits.getAnzahl()) + "Zahl" + Integer.toString(enemyUnits.getAnzahl()));
 			break;
 		case 'b':
 			erstelleKrieger(true);
+			popUpMessages("Zahl" + Integer.toString(myUnits.getAnzahl()) + "Zahl" + Integer.toString(enemyUnits.getAnzahl()));
 			break;
 		case 's':
 			spielGewinnen();
@@ -794,16 +796,18 @@ public class GameActivity extends Activity {
 	}
 
 	private void popUpMessages (final String message) {
-		handlerMessage.post(new Runnable() {
-			@Override
-			public void run() {
-				TextView txt = (TextView) findViewById(R.id.messages);
-				txt.setText(message);
-				txt.setVisibility(View.VISIBLE);
-				txt.setAnimation(null);
-			}
-		});
-	  
+		TextView txt = (TextView) findViewById(R.id.messages);
+		if (!txt.isShown()){
+			handlerMessage.post(new Runnable() {
+				@Override
+				public void run() {
+					TextView txt = (TextView) findViewById(R.id.messages);
+					txt.setText(message);
+					txt.setVisibility(View.VISIBLE);
+					txt.setAnimation(null);
+				}
+			});
+		}
 		handlerMessage.postDelayed((new Runnable() {
 			@Override
 			public void run() {

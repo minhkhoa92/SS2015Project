@@ -12,12 +12,12 @@
         android:layout_x="26dp"
         android:layout_y="17dp"
         android:text="Credits: \n Alex, Basti, Minh, Jurek, Stephan \n \n Informatik-Workshop SS2015
-        "/>
+        
 
-    <!-- \n \n Artists: This app never would have finished without their work
+    \n \n Soundspezialisten und Musiker:
         \n www.freesoundeffects.com (c) 2015
-        \n A short story - by darthduba visit his profile on newsground.com
-        \n Stacy's trumpet - by Drawoh visit his profile on newsground.com
-        \n -->
-    
+        \n A short story - by darthduba[dot]newgrounds[dot]com
+        \n Stacy's trumpet - by drawoh[dot]newgrounds[dot]com
+   
+    "/>
 </AbsoluteLayout>

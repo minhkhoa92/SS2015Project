@@ -98,32 +98,34 @@ public class EinheitFiFoStack {
 	}
 	
 	protected void deleteFirst() {
-		switch (delPos) {
-			case 0:
-				ein1.setamlaufen(false);
-				ein1.resetX();
-				break;
-			case 1:
-				ein2.setamlaufen(false);
-				ein2.resetX();
-				break;
-			case 2:
-				ein3.setamlaufen(false);
-				ein3.resetX();
-				break;
-			case 3:
-				ein4.setamlaufen(false);
-				ein4.resetX();
-				break;
-			case 4:
-				ein5.setamlaufen(false);
-				ein5.resetX();
-				break;
-			default:
-				break;
-			}
-		delPos++;
-		delPos = (int) (delPos % 5);
+		if (getAnzahl() > 0) {
+			switch (delPos) {
+				case 0:
+					ein1.setamlaufen(false);
+					ein1.resetX();
+					break;
+				case 1:
+					ein2.setamlaufen(false);
+					ein2.resetX();
+					break;
+				case 2:
+					ein3.setamlaufen(false);
+					ein3.resetX();
+					break;
+				case 3:
+					ein4.setamlaufen(false);
+					ein4.resetX();
+					break;
+				case 4:
+					ein5.setamlaufen(false);
+					ein5.resetX();
+					break;
+				default:
+					break;
+				}
+			delPos++;
+			delPos = (int) (delPos % 5);
+		}
 	}
 	
 	private int calcCount(){

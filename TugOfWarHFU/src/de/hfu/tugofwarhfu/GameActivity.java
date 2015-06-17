@@ -50,7 +50,9 @@ public class GameActivity extends Activity {
 	protected Random rand;
 	Handler platzierenDerEinheiten;
 	Handler handlerMessage = new Handler();
+	Handler soundHandler = new Handler();
 	Timer updateTimer;
+	Timer einheitenErsteller;
 	MediaPlayer music;
 	MediaPlayer sound_schwert1;
 	MediaPlayer sound_schwert2;
@@ -128,6 +130,7 @@ public class GameActivity extends Activity {
 				//Goldschleife von Alex Ende
 				
 				
+				einheitenErsteller = new Timer();
 				//Anfang von Stringaufruf fuer Einheitenreihenfolge (Bot)
 				platzierenDerEinheiten=new Handler();
 				TimerTask timertask = new TimerTask() {
@@ -136,9 +139,9 @@ public class GameActivity extends Activity {
 						// bei jedem 'a' wird ein feindlicher Soldat erstellt
 						autoErstellenNachInt(getString(R.string.einheiten_erstellen).charAt(stringpos)); stringpos++; 
 						} };
-				new Timer().schedule(timertask, 5000, 2000);
+				einheitenErsteller.schedule(timertask, 5000, 2000);
 				
-				TimerTask timernUeberpruefen = new TimerTask() {
+				TimerTask timerUeberpruefen = new TimerTask() {
 					@Override public void run() {
 				if (soldatbuttonactive) { //aktiviert den Button nach dem Cooldown wieder, Aufruf aus einem wiederholten Timertask
 					ImageButton thisimagebutton = (ImageButton) findViewById(R.id.imageButtonSoldat);
@@ -154,7 +157,7 @@ public class GameActivity extends Activity {
 				
 				} };
 				updateTimer = new Timer();
-				updateTimer.schedule(timernUeberpruefen, 200, DELAYTOSPEED);
+				updateTimer.schedule(timerUeberpruefen, 200, DELAYTOSPEED);
 	    }
 	
 	protected void onStart(){ //passiert wenn die Activity gestartet wird
@@ -182,6 +185,7 @@ public class GameActivity extends Activity {
 		music.release();
 		super.onPause();
 		updateTimer.cancel();
+		einheitenErsteller.cancel();
 		rl.removeAllViews();
 		finish();
 		//finish() sorgt fuer keine Ueberbleibsel wenn die GameActivity von anderen Activities ueberlagert wird
@@ -217,8 +221,6 @@ public class GameActivity extends Activity {
 				gebeLaufAnim_g(id);
 			} } ) ;
 		}
-		
-		popUpMessages("Zahl" + Integer.toString(myUnits.getAnzahl()) + "Zahl" + Integer.toString(enemyUnits.getAnzahl()));
 	}
 	
 	private void erstelleKrieger(boolean isenemy) {
@@ -251,7 +253,6 @@ public class GameActivity extends Activity {
 				gebeLaufAnim_g(id);
 			} } ) ;
 		}
-		popUpMessages("Zahl" + Integer.toString(myUnits.getAnzahl()) + "Zahl" + Integer.toString(enemyUnits.getAnzahl()));
 	}
 
 	private void gebeLaufAnim(int id) {
@@ -603,7 +604,7 @@ public class GameActivity extends Activity {
 				iv.setImageResource(0);
 				rl.removeView(iv);
 				enemyUnits.setTeamAmKaempfen(false);
-				if ( myUnits.firstX() > GRENZEFEINDLICHEBASIS ) {
+				if ( myUnits.firstX() < GRENZEFEINDLICHEBASIS ) {
 					myUnits.setTeamAmKaempfen(false);
 				}
 				if ( myUnits.images.size() > 0 && !myUnits.isTeamAmKaempfen() ) {
@@ -643,7 +644,6 @@ public class GameActivity extends Activity {
 			}}) ;
 		}
 		//loeschen der Soldaten aus der Warteschlange / FIFO Stack
-		popUpMessages("Zahl" + Integer.toString(myUnits.getAnzahl()) + "Zahl" + Integer.toString(enemyUnits.getAnzahl()));
 	}
 	
 	private void laufenIfNoetig(boolean isEnemy) {
@@ -713,17 +713,12 @@ public class GameActivity extends Activity {
 		switch (c) {
 		case 'a':
 			erstelleSoldat(true);
-			popUpMessages("Zahl" + Integer.toString(myUnits.getAnzahl()) + "Zahl" + Integer.toString(enemyUnits.getAnzahl()));
 			break;
 		case 'b':
 			erstelleKrieger(true);
-			popUpMessages("Zahl" + Integer.toString(myUnits.getAnzahl()) + "Zahl" + Integer.toString(enemyUnits.getAnzahl()));
 			break;
 		case 's':
 			spielGewinnen();
-			break;
-		case 'u':
-			popUpMessages("Wow! Na gut, dann siege.");
 			break;
 		case 'v':
 			popUpMessages("gewinnst du!");
@@ -734,12 +729,6 @@ public class GameActivity extends Activity {
 		case 'x':
 			popUpMessages("Okay, wenn du das");
 			break;
-//		case 'y':
-//			popUpMessages("Protip: Press buttons.");;
-//			break;
-//		case 'z':
-//			popUpMessages("Start! Have fun!");
-//			break;
 		default:
 			break;
 		}
@@ -769,28 +758,26 @@ public class GameActivity extends Activity {
 	}
 
 	private void popUpMessages (final String message) {
-		TextView txt = (TextView) findViewById(R.id.messages);
-		if (!txt.isShown()){
-			handlerMessage.post(new Runnable() {
-				@Override
-				public void run() {
-					TextView txt = (TextView) findViewById(R.id.messages);
-					txt.setText(message);
-					txt.setVisibility(View.VISIBLE);
-					txt.setAnimation(null);
-				}
-			});
-		}
+		handlerMessage.post(new Runnable() {
+			@Override
+			public void run() {
+				TextView txt = (TextView) findViewById(R.id.messages);
+				txt.setText(message);
+				txt.setVisibility(View.VISIBLE);
+				txt.setAnimation(null);
+			}
+		});
+		
 		handlerMessage.postDelayed((new Runnable() {
 			@Override
 			public void run() {
 				final Animation anim = AnimationUtils.loadAnimation(returnContext(), R.anim.fade_two_sec);
+				anim.setFillAfter(true);
 				TextView txt = (TextView) findViewById(R.id.messages);
 				if ( txt.getAnimation() == null ) {
 					txt.setAnimation(anim);
 					anim.start();
 				}
-				txt.setVisibility(View.INVISIBLE);
 			}
 		}) , 2000);
 	}
@@ -800,7 +787,7 @@ public class GameActivity extends Activity {
 			if (!sound_schwert1.isPlaying() && !sound_schwert2.isPlaying()) {
 				try {
 					sound_schwert2.start();
-					new Handler().postDelayed(new Runnable() {
+					soundHandler.postDelayed(new Runnable() {
 						
 						@Override
 						public void run() {

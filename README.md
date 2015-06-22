@@ -5,4 +5,4 @@ Diese App enstand als Gruppenarbeit in dem Workshop Jurkovic/Kramer/Gaukler mit 
 
 Ich habe die Ehre es auf meinem github beobachten zu dürfen.
 
-Wie die Eigenschaft mal ist, ist das nicht mein Projekt.
+Wie die Eigenschaft von Gruppenprojekt ist, ist das nicht mein Projekt.

@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <animation-list xmlns:android="http://schemas.android.com/apk/res/android" 
        android:oneshot="false">
-    <item android:drawable="@drawable/stickman6_g" android:duration="80" />
-    <item android:drawable="@drawable/stickman5_g" android:duration="80" />
-    <item android:drawable="@drawable/stickman4_g" android:duration="80" />
-    <item android:drawable="@drawable/stickman3_g" android:duration="80" />
-    <item android:drawable="@drawable/stickman2_g" android:duration="80" />
-    <item android:drawable="@drawable/stickman1_g" android:duration="80" />
+    <item android:drawable="@drawable/stickman6_g" android:duration="200" />
+    <item android:drawable="@drawable/stickman5_g" android:duration="200" />
+    <item android:drawable="@drawable/stickman4_g" android:duration="200" />
+    <item android:drawable="@drawable/stickman3_g" android:duration="200" />
+    <item android:drawable="@drawable/stickman2_g" android:duration="200" />
 
 </animation-list>

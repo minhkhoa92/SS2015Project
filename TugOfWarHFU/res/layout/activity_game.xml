@@ -13,8 +13,26 @@
         android:layout_height="604dp"
         android:layout_x="0dp"
         android:layout_y="-100dp"
-        android:src="@drawable/hintergrund_real_version1" />
+        android:src="@drawable/hintergrund_final" />
+	
+	<TextView
+        android:id="@+id/LebenRot"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_x="12dp"
+        android:layout_y="63dp"
+        android:text="@string/empty"
+        android:textColor="@color/red" />
 
+    <TextView
+        android:id="@+id/LebenBlau"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_x="540dp"
+        android:layout_y="63dp"
+        android:text="@string/empty"
+        android:textColor="@color/blue" />
+    
     <ImageButton
         android:id="@+id/imageButtonSoldat"
         android:layout_width="wrap_content"
@@ -36,61 +54,6 @@
         android:onClick="SpawnKrieger"
         android:src="@drawable/ic_krieger" />
 
-    <ImageButton
-        android:id="@+id/imagePauseButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginRight="28dp"
-        android:layout_x="178dp"
-        android:layout_y="322dp"
-        android:onClick="gamePause"
-        android:src="@android:drawable/ic_media_pause" />
-
-    <ImageView
-        android:id="@+id/stickman_walk"
-        android:layout_width="54dp"
-        android:layout_height="106dp"
-        
-        android:layout_x="23dp"
-        android:layout_y="-150dp"
-        android:contentDescription="Animation"
-        android:visibility="invisible" />
-
-    <ImageView
-        android:id="@+id/stickman_fight"
-        android:layout_width="91dp"
-        android:layout_height="96dp"
-        android:layout_x="73dp"
-        android:layout_y="161dp"
-        android:visibility="invisible" />
-
-    <ImageView
-        android:id="@+id/stickman_walk_gegner"
-        android:layout_width="91dp"
-        android:layout_height="96dp"
-        android:layout_x="373dp"
-        android:layout_y="161dp"
-        android:src="@drawable/anim_stickman_walking_g" 
-        android:visibility="invisible"/>
-
-    <Button
-        android:id="@+id/button2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_x="516dp"
-        android:layout_y="39dp"
-        android:onClick="spielGewinnen"
-        android:text="gewinnen" />
-
-    <Button
-        android:id="@+id/button1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_x="427dp"
-        android:layout_y="38dp"
-        android:onClick="spielVerlieren"
-        android:text="verlieren" />
-
     <TextView
         android:id="@+id/gold_anzeige"
         android:layout_width="wrap_content"
@@ -100,6 +63,29 @@
         android:text="Gold"
         android:textColor="@color/Gold"
         android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <ImageButton
+        android:id="@+id/imagePauseButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="28dp"
+        android:layout_x="388dp"
+        android:layout_y="316dp"
+        android:onClick="gamePause"
+        android:src="@android:drawable/ic_media_pause" />
+
+    <TextView
+        android:id="@+id/messages"
+        android:layout_width="172dp"
+        android:layout_height="wrap_content"
+        android:layout_x="193dp"
+        android:layout_y="328dp"
+        android:background="@color/black"
+        android:text="@string/empty"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textColor="@color/white"
+        android:gravity="center"
+        android:visibility="invisible" />
     
     </AbsoluteLayout> 
 

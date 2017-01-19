@@ -1,35 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="de.hfu.tugofwarhfu"
-    android:versionCode="1"
-    android:versionName="1.0" >
+<manifest xmlns:mani="http://schemas.android.com/apk/res/android"
+    package="de.hfu.tugofwarhfu" >
 
     <uses-sdk
-        android:minSdkVersion="17"
-        android:targetSdkVersion="18" />
+        mani:minSdkVersion="16"
+        mani:targetSdkVersion="25" />
     
 
     <application
-        android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name"
-        android:theme="@android:style/Theme.NoTitleBar.Fullscreen" android:persistent="false">
+        mani:label="@string/app_name">
         <activity
-            android:name="de.hfu.tugofwarhfu.MenuActivity" android:screenOrientation="landscape"
-            android:label="@string/app_name" >
+            mani:icon="@drawable/ic_launcher"
+            mani:name="de.hfu.tugofwarhfu.MenuActivity"
+            mani:label="@string/app_name" >
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action mani:name="android.intent.action.MAIN" />
+                <category mani:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="AnleitungActivity" android:screenOrientation="landscape"></activity>
-        <activity android:name="CreditsActivity" android:screenOrientation="landscape"></activity>
-        <activity android:name="GameActivity" android:screenOrientation="landscape">
-           
-        </activity>
-        <activity android:name="LoseActivity" android:screenOrientation="landscape"></activity>
-        <activity android:name="WinActivity" android:screenOrientation="landscape"></activity>
+        <activity mani:name="AnleitungActivity"></activity>
+        <activity mani:name="CreditsActivity"></activity>
+        <activity mani:name="GameActivity"></activity>
+        <activity mani:name="LoseActivity"></activity>
+        <activity mani:name="WinActivity"></activity>
     </application>
 
 </manifest>

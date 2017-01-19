@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AbsoluteLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".CreditsActivity" >
+
+    <TextView
+        android:id="@+id/messages"
+        android:layout_width="240dp"
+        android:layout_height="310dp"
+        android:layout_x="26dp"
+        android:layout_y="17dp"
+        android:text="Credits: \n Alex, Basti, Minh, Jurek, Stephan \n \n Informatik-Workshop SS2015
+        
+
+    \n \n Soundspezialisten und Musiker:
+        \n www.freesoundeffects.com (c) 2015
+        \n A short story - by darthduba[dot]newgrounds[dot]com
+        \n Stacy's trumpet - by drawoh[dot]newgrounds[dot]com
+   
+    "/>
+</AbsoluteLayout>

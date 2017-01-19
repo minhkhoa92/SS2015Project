@@ -1,0 +1,28 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="de.hfu.tugofwar"
+    android:versionCode="10"
+    android:versionName="@string/app_version">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity
+            android:icon="@mipmap/ic_launcher"
+            android:name="de.hfu.tugofwar.MenuActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name="de.hfu.tugofwar.AnleitungActivity"></activity>
+        <activity android:name="de.hfu.tugofwar.CreditsActivity"></activity>
+        <activity android:name="de.hfu.tugofwar.GameActivity"></activity>
+        <activity android:name="de.hfu.tugofwar.LoseActivity"></activity>
+        <activity android:name="de.hfu.tugofwar.WinActivity"></activity>
+    </application>
+
+</manifest>

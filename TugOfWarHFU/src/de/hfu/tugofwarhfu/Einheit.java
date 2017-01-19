@@ -1,7 +1,5 @@
 package de.hfu.tugofwarhfu;
 
-//import android.util.Log;
-
 public class Einheit {
 	private final int ARTSOLDAT = GameActivity.ARTSOLDAT;
 	private final int ARTKRIEGER = GameActivity.ARTKRIEGER;

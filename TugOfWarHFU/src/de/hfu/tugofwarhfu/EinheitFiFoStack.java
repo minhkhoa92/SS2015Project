@@ -22,12 +22,7 @@ public class EinheitFiFoStack {
 		insPos = 0; delPos = 0;
 		teamAmKaempfen = false;
 	}
-	
-// Bilder hinzufuegen befehl: ${stackname}.images.addLast(${ImageViewName});
-// Bild loeschen Befehl: ${stackname}.images.removeFirst();
-// Bild ersetzen ${stackname}.images.set(${int_index}, ${variablename});
-	
-	
+
 	/**
 	* Anfang der zyklischen Warteschlange
 	*/
@@ -66,7 +61,8 @@ public class EinheitFiFoStack {
 	}
 	
 	protected boolean addNewKrieger(){
-		if ( ! (ein1.getHp() > 0 && (int) calcCount() < 1 ) ) { //bei 5 gefuellten items sind inspos und delpos auf der gleichen Stelle x, x - x ergibt count = 0
+		if ( ! (ein1.getHp() > 0 && (int) calcCount() < 1 ) ) {
+			//bei 5 gefuellten items sind inspos und delpos auf der gleichen Stelle x, x - x ergibt count = 0
 			switch (insPos) {
 			case 0:
 				ein1.einheitWerte(GameActivity.ARTKRIEGER);

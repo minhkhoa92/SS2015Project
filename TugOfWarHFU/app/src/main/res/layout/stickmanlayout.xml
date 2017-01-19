@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AbsoluteLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/AbsoluteLayoutStickman" >
+
+    <ImageView
+        android:id="@+id/Hintergrund"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:cropToPadding="false"
+        android:scaleType="fitStart"
+        android:src="@drawable/hintergrund_final" />
+
+    <ImageButton
+        android:id="@+id/imageButtonSoldat"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="14dp"
+        android:layout_marginLeft="13dp"
+        android:layout_x="10dp"
+        android:layout_y="307dp"
+        android:onClick="SpawnSoldat"
+        android:src="@mipmap/ic_soldat" />
+
+    <ImageButton
+        android:id="@+id/imageButtonKrieger"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="13dp"
+        android:layout_x="88dp"
+        android:layout_y="309dp"
+        android:onClick="SpawnKrieger"
+        android:src="@mipmap/ic_krieger" />
+
+    <ImageButton
+        android:id="@+id/imagePauseButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="28dp"
+        android:layout_x="178dp"
+        android:layout_y="322dp"
+        android:onClick="gamePause"
+        android:src="@android:drawable/ic_media_pause" />
+
+    <ImageView
+        android:id="@+id/stickman_walk"
+        android:layout_width="54dp"
+        android:layout_height="106dp"
+        android:layout_marginTop="47dp"
+        android:layout_x="23dp"
+        android:layout_y="45dp"
+        android:contentDescription="Animation"
+        android:visibility="invisible" />
+    
+    </AbsoluteLayout> 
+

@@ -1,6 +1,5 @@
 package de.hfu.tugofwarhfu;
 
-import de.hfu.tugofwarhfu.R;
 import android.app.Activity;
 import android.content.Intent;
 import android.media.MediaPlayer;
@@ -22,16 +21,12 @@ public class MenuActivity extends Activity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.menue, menu);
 		return true;
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
 		int id = item.getItemId();
 		if (id == R.id.action_settings) {
 			return true;
@@ -40,21 +35,21 @@ public class MenuActivity extends Activity {
 	}
 	
 	private void restartMus(){
-	if (!music.isPlaying()){
-		try {
-			music.release();
-			music = MediaPlayer.create(this, R.raw.a_short_story);
-			int maxVolume = 1000000;
-			double currentVolume = 900000;
-			float floatVolume = (float) (Math.log(currentVolume + 1)/Math.log(maxVolume + 1));
-			music.setLooping(true);
-			music.start();
-			music.setVolume(floatVolume, floatVolume);
-		} catch (IllegalStateException e) {
-			e.printStackTrace();
-		}
-	}
-}
+        if (!music.isPlaying()){
+            try {
+                music.release();
+                music = MediaPlayer.create(this, R.raw.a_short_story);
+                int maxVolume = 1000000;
+                double currentVolume = 900000;
+                float floatVolume = (float) (Math.log(currentVolume + 1)/Math.log(maxVolume + 1));
+                music.setLooping(true);
+                music.start();
+                music.setVolume(floatVolume, floatVolume);
+            } catch (IllegalStateException e) {
+                Log.Debug("Music", e.getMessage());
+            }
+        }
+    }
 	
 	@Override
 	protected void onResume() {
@@ -71,38 +66,35 @@ public class MenuActivity extends Activity {
 				music.start();
 				music.setVolume(floatVolume, floatVolume);
 			} catch (IllegalStateException e) {
-				e.printStackTrace();
+                Log.Debug("Music", e.getMessage());
 			}
 		}
 		super.onResume();
 	}
 
 	public void gotoSpiel(View view) {
-	    // Do something in response to button
 		if (music!=null && music.isPlaying()) {
 			try {
 				music.stop();
 				music.release();
 				music = null;
 			} catch (IllegalStateException e) {
-				e.printStackTrace();
+                Log.Debug("Music", e.getMessage());
 			}
 		}
 		Intent intent = new Intent (this, GameActivity.class);
 		startActivity(intent);
-		 
-		
 	}
+
 	public void gotoAnleitung(View view) {
-	    // Do something in response to button
 		Intent intent = new Intent (this, AnleitungActivity.class);
 		startActivity(intent);
 		
 	}
+
 	public void gotoCredits(View view) {
 		Intent intent = new Intent (this, CreditsActivity.class);
 		startActivity(intent);
-	
 	}
 
 }

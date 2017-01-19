@@ -6,7 +6,6 @@ import java.util.TimerTask;
 import java.util.Random;
 import java.lang.Thread;
 
-import de.hfu.tugofwarhfu.R;
 import android.app.Activity;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -26,7 +25,7 @@ import android.view.animation.AnimationUtils;
 @SuppressWarnings("deprecation")
 public class GameActivity extends Activity {
 
-	// Konstanten Minh
+	// Konstanten
 	private static final int DELAYTOSPEED = 125;
 	public static final int ARTKRIEGER = 2;
 	public static final int ARTSOLDAT = 1;
@@ -39,7 +38,7 @@ public class GameActivity extends Activity {
 	private static final int STDPOSY = 450;
 	private static final int ticksPerSecond = 1000 / DELAYTOSPEED;
 	
-	// Variablen Minh
+
 	EinheitFiFoStack myUnits;// Einheiten
 	EinheitFiFoStack enemyUnits;
 	boolean soldatbuttonactive = true;
@@ -61,8 +60,6 @@ public class GameActivity extends Activity {
 	
 	
 	
-	//Variablen von ALex
-	
 
 	TextView sekunden_anzeige;
 	TextView goldstand;
@@ -70,18 +67,15 @@ public class GameActivity extends Activity {
 	boolean running=true;
 	Handler gold_handler;
 
-
-//Variable von Alex Ende
-	
 	TextView leben_rot;
 	TextView leben_blau;
 	        
 	@Override
-	public void onCreate(Bundle savedInstanceState) { // passiert wenn die Activity erstellt wird
+	public void onCreate(Bundle savedInstanceState) {
 		music = MediaPlayer.create(this, R.raw.stacy_s_trumpet);
 		music.setLooping(true);
 		int maxVolume = 1000000;
-		double currentVolume = 0.5; // 1.5 stacy's trumpet
+		double currentVolume = 0.5;
 		float floatVolume = (float) (Math.log(currentVolume + 1)/Math.log(maxVolume + 1));
 		if (music!=null && !music.isPlaying()) {
 			try {
@@ -99,8 +93,7 @@ public class GameActivity extends Activity {
 	    leben_rot.setText(Integer.toString(baseOwn));
 	    leben_blau.setText(Integer.toString(baseEnemy));
 	    tick = 0;
-		   
-			    //Goldschleife von Alex
+
 			    goldstand=(TextView) findViewById(R.id.gold_anzeige);
 			    gold_handler = new Handler();
 				
@@ -126,17 +119,13 @@ public class GameActivity extends Activity {
 				};
 				Timer time = new Timer();
 				time.schedule(timetask, 1000, 1000); 
-				
-				//Goldschleife von Alex Ende
+
 				
 				
 				einheitenErsteller = new Timer();
-				//Anfang von Stringaufruf fuer Einheitenreihenfolge (Bot)
 				platzierenDerEinheiten=new Handler();
 				TimerTask timertask = new TimerTask() {
 					@Override public void run() {
-						// bot, autoerstellen
-						// bei jedem 'a' wird ein feindlicher Soldat erstellt
 						autoErstellenNachInt(getString(R.string.einheiten_erstellen).charAt(stringpos)); stringpos++; 
 						} };
 				einheitenErsteller.schedule(timertask, 5000, 2000);
@@ -147,11 +136,6 @@ public class GameActivity extends Activity {
 					ImageButton thisimagebutton = (ImageButton) findViewById(R.id.imageButtonSoldat);
 					thisimagebutton.setClickable(true); //aktivieren von Soldatenbutton
 				}
-				//Ueberpruefen von welchem Team Einheiten stehen
-				// nachfrage = 0 keine Einheit
-				// nachfrage = 1 nur eine eigene Einheit
-				// nachfrage = 2 Einheit von beiden da
-				// nachfrage = 3 nur eine feindliche Einheit
 				tick++;
 				if ((int)nachfrage() > 0 && baseEnemy > 0 && baseOwn > 0) aktualisiereSpiel();
 				
@@ -190,8 +174,7 @@ public class GameActivity extends Activity {
 		finish();
 		//finish() sorgt fuer keine Ueberbleibsel wenn die GameActivity von anderen Activities ueberlagert wird
 	}
-	
-	// erstellung eines neuen ImageViews für jeden Knopfdruck
+
 	private void erstelleSoldat(boolean isEnemy) {
 		if (!isEnemy){
 			platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
@@ -230,7 +213,6 @@ public class GameActivity extends Activity {
 				neuerKrieger.setImageResource(R.drawable.anim_stickwarrior);
 				int id = View.generateViewId();
 				neuerKrieger.setId(id);
-				// erstellung eines neuen ImageViews für jeden Knopfdruck
 				rl.addView(neuerKrieger, erstelleAbsoluteLayoutParamWarrior(Einheit.XSTARTMYUNIT));
 				myUnits.images.addLast(id);
 				gebeLaufAnim(id);
@@ -293,7 +275,7 @@ public class GameActivity extends Activity {
 		} else if (myUnits.getAnzahl() == 5 ){ popUpMessages("Limit ist bei 5."); }
 	}
 
-	public void SpawnKrieger(View v) //onClick Funktion, spawnt Krieger -> Dieser Knopf lässt gerade den gegnerischen Stickman sterben und lässt unseren an der Stelle weiterlaufen. wo er zuletzt gekämpft hat
+	public void SpawnKrieger(View v) //onClick Funktion, spawnt Krieger -> Dieser Knopf lï¿½sst gerade den gegnerischen Stickman sterben und lï¿½sst unseren an der Stelle weiterlaufen. wo er zuletzt gekï¿½mpft hat
 	{
 	ImageButton thisimagebutton = (ImageButton) findViewById(R.id.imageButtonKrieger);
 		
@@ -310,12 +292,11 @@ public class GameActivity extends Activity {
 			aktuellesguthaben=aktuellesguthaben-50;	//zaehler ist der Goldwert, der Soldat kostet gerade 20 Gold
 			erstelleKrieger(false);
 		} else if (myUnits.getAnzahl() == 5 ){ popUpMessages("Limit ist bei 5."); }
-	//	Log.d("kek","methode wird aufgerufen");
 	}
 
 
 
-	public void gamePause(View v) //onClick Funktion, soll das Spiel pausieren.
+	public void gamePause(View v)
 	{
 		popUpMessages("Tut nichts.");
 	}
@@ -399,7 +380,7 @@ public class GameActivity extends Activity {
 		}
 		
 		if (nachfrage() == 1) { //wenn nur eine eigene Einheit gespawnt ist
-			if(myUnits.firstX() >= GRENZEFEINDLICHEBASIS) {//HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
+			if(myUnits.firstX() >= GRENZEFEINDLICHEBASIS) {//HITBOXEN! Einehit-X-Wert und vorlï¿½ufiger X wert der basis
 				if (tick % ticksPerSecond < 1) {
 					callDmgBase(false);
 					playFightTrack2();
@@ -418,7 +399,7 @@ public class GameActivity extends Activity {
 		
 		if (nachfrage() == 3) {
 			//wenn nur eine gegnerische  Einheit gespawnt ist
-			if(enemyUnits.firstX() <= GRENZEMEINEBASE) {//HITBOXEN! Einehit-X-Wert und vorläufiger X wert der basis
+			if(enemyUnits.firstX() <= GRENZEMEINEBASE) {//HITBOXEN! Einehit-X-Wert und vorlï¿½ufiger X wert der basis
 				if (tick % ticksPerSecond < 1) {
 					callDmgBase(true);
 					playFightTrack2();
@@ -440,7 +421,7 @@ public class GameActivity extends Activity {
 		
 //		setzt den x-wert, wo die Animation abgespielt werden soll
 			final int x = myUnits.firstX();
-			// hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
+			// hier wird die x position des stickmans ï¿½bergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
 			//in welcher Hoehe neu ein ImageView gespawnt wird
 			platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
 //				bringt die erste Einheit in den index
@@ -468,7 +449,7 @@ public class GameActivity extends Activity {
 	
 	private void startKaempfen_g() {
 		
-		final int x = enemyUnits.firstX(); // hier wird die x position des stickmans übergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
+		final int x = enemyUnits.firstX(); // hier wird die x position des stickmans ï¿½bergeben und dementsprechen findet die Kampfanimation an dieser Stelle statt!
 
 		
 		platzierenDerEinheiten.post(new Runnable() { @Override public void run() { 
@@ -550,13 +531,13 @@ public class GameActivity extends Activity {
 		}
 	}
 
-	public void spielVerlieren(){ //muss nachher in eine If bedingung in einen Timer rein, die z.B. alles halbe sekunde checkt, ob eine Base zerstört ist
+	public void spielVerlieren(){ //muss nachher in eine If bedingung in einen Timer rein, die z.B. alles halbe sekunde checkt, ob eine Base zerstï¿½rt ist
 		finish();
 		Intent intent = new Intent (this, LoseActivity.class);
 		startActivity(intent);
 	}
 	
-	public void spielGewinnen(){ //muss nachher in eine If bedingung in einen Timer rein, die z.B. alles halbe sekunde checkt, ob eine Base zerstört ist
+	public void spielGewinnen(){ //muss nachher in eine If bedingung in einen Timer rein, die z.B. alles halbe sekunde checkt, ob eine Base zerstï¿½rt ist
 		baseEnemy = -100;
 		finish();
 		Intent intent = new Intent (this, WinActivity.class);
